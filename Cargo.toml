@@ -1,0 +1,6 @@
+[package]
+name = "logics"
+version = "0.1.0"
+authors = ["kevlarr <echo1+git@dvnl.net>"]
+
+[dependencies]
