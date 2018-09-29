@@ -55,9 +55,7 @@ fn eval(input: String) {
         return;
     }
 
-    println!("LH: {}", left_hand);
-    println!("Op: {}", operator);
-    println!("RH: {}", right_hand);
+    println!("{}", operator(left_hand, right_hand));
 }
 
 fn parse_integer(opt: Option<&str>) -> Option<i32> {
@@ -70,10 +68,31 @@ fn parse_integer(opt: Option<&str>) -> Option<i32> {
     }
 }
 
-fn parse_operator(opt: Option<&str>) -> Option<&str> {
+fn parse_operator(opt: Option<&str>) -> Option<fn(i32, i32) -> i32> {
     match opt {
-        // FIXME
-        Some(s) => Some(s),
+        Some(s) => match s {
+            "+" => Some(add),
+            "-" => Some(subtract),
+            "*" => Some(multiply),
+            "/" => Some(divide),
+            _ => None,
+        },
         None => None,
     }
+}
+
+fn add(x: i32, y: i32) -> i32 {
+    x + y
+}
+
+fn subtract(x: i32, y: i32) -> i32 {
+    x - y
+}
+
+fn multiply(x: i32, y: i32) -> i32 {
+    x * y
+}
+
+fn divide(x: i32, y: i32) -> i32 {
+    x / y
 }
