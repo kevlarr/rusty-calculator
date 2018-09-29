@@ -30,24 +30,30 @@ fn eval(input: String) {
     let left_hand = match parse_integer(pieces.next()) {
         Some(x) => x,
         None => {
-            println!("Must supply valid left-hand argument");
+            println!("Error: Must supply valid left-hand argument");
             return;
         },
     };
     let operator = match parse_operator(pieces.next()) {
         Some(op) => op,
         None => {
-            println!("Must supply valid operator");
+            println!("Error: Must supply valid operator");
             return;
         },
     };
     let right_hand = match parse_integer(pieces.next()) {
         Some(x) => x,
         None => {
-            println!("Must supply valid right-hand argument");
+            println!("Error: Must supply valid right-hand argument");
             return;
         },
     };
+
+    // ... and to be a proper expression there shouldn't be anything left
+    if let Some(_) = pieces.next() {
+        println!("Error: Invalid expression following operator");
+        return;
+    }
 
     println!("LH: {}", left_hand);
     println!("Op: {}", operator);
