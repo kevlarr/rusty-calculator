@@ -27,39 +27,47 @@ fn eval(input: String) {
     let mut pieces = input.split_whitespace();
 
     // Should be three pieces: left arg, operator, and right arg
-    let left_hand = match pieces.next() {
+    let left_hand = match parse_integer(pieces.next()) {
+        Some(x) => x,
         None => {
-            println!("Must provide left-hand argument");
+            println!("Must supply valid left-hand argument");
             return;
-        },
-        Some(s) => match isize::from_str_radix(s, 10) {
-            Ok(x) => x,
-            Err(_) => {
-                println!("Left-hand argument must be an integer");
-                return;
-            },
         },
     };
-
-    let operator = match pieces.next() {
+    let operator = match parse_operator(pieces.next()) {
+        Some(op) => op,
         None => {
-            println!("Must provide operator");
+            println!("Must supply valid operator");
             return;
         },
-        Some(s) => match operator_from_str(s) {
-            Ok(op) => op,
-            Err(_) => {
-                println!("Must supply valid operator");
-                return;
-            },
+    };
+    let right_hand = match parse_integer(pieces.next()) {
+        Some(x) => x,
+        None => {
+            println!("Must supply valid right-hand argument");
+            return;
         },
     };
 
     println!("LH: {}", left_hand);
     println!("Op: {}", operator);
+    println!("RH: {}", right_hand);
 }
 
-fn operator_from_str(s: &str) -> Result<&str, &str> {
-    // FIXME
-    Ok(s)
+fn parse_integer(opt: Option<&str>) -> Option<i32> {
+    match opt {
+        Some(s) => match i32::from_str_radix(s, 10) {
+            Ok(x) => Some(x),
+            Err(_) => None,
+        },
+        None => None,
+    }
+}
+
+fn parse_operator(opt: Option<&str>) -> Option<&str> {
+    match opt {
+        // FIXME
+        Some(s) => Some(s),
+        None => None,
+    }
 }
