@@ -1,3 +1,5 @@
+extern crate logics;
+
 use std::io;
 use std::io::Write;
 
@@ -71,28 +73,12 @@ fn parse_integer(opt: Option<&str>) -> Option<i32> {
 fn parse_operator(opt: Option<&str>) -> Option<fn(i32, i32) -> i32> {
     match opt {
         Some(s) => match s {
-            "+" => Some(add),
-            "-" => Some(subtract),
-            "*" => Some(multiply),
-            "/" => Some(divide),
+            "+" => Some(logics::add),
+            "-" => Some(logics::subtract),
+            "*" => Some(logics::multiply),
+            "/" => Some(logics::divide),
             _ => None,
         },
         None => None,
     }
-}
-
-fn add(x: i32, y: i32) -> i32 {
-    x + y
-}
-
-fn subtract(x: i32, y: i32) -> i32 {
-    x - y
-}
-
-fn multiply(x: i32, y: i32) -> i32 {
-    x * y
-}
-
-fn divide(x: i32, y: i32) -> i32 {
-    x / y
 }
