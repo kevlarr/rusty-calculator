@@ -1,4 +1,4 @@
-pub fn add(x: i32, y: i32) -> i32 {
+pub fn add(x: i32, y: i32) -> Result<i32, std::num::ParseIntError> {
     let mut rval = String::with_capacity(32);
     let xb = to_bit_array(x);
     let yb = to_bit_array(y);
@@ -19,7 +19,7 @@ pub fn add(x: i32, y: i32) -> i32 {
     i32::from_str_radix(
         rval.chars().rev().collect::<String>().as_str(),
         2,
-    ).unwrap()
+    )
 }
 
 fn half_adder(b1: bool, b2: bool) -> (bool, bool) {
@@ -33,19 +33,19 @@ fn full_adder(b1: bool, b2: bool, b3: bool) -> (bool, bool) {
     (sum2, carry1 || carry2)
 }
 
-pub fn subtract(x: i32, y: i32) -> i32 {
+pub fn subtract(x: i32, y: i32) -> Result<i32, std::num::ParseIntError> {
     // FIXME
-    x - y
+    i32::from_str_radix("0000", 2)
 }
 
-pub fn multiply(x: i32, y: i32) -> i32 {
+pub fn multiply(x: i32, y: i32) -> Result<i32, std::num::ParseIntError> {
     // FIXME
-    x * y
+    i32::from_str_radix("0000", 2)
 }
 
-pub fn divide(x: i32, y: i32) -> i32 {
+pub fn divide(x: i32, y: i32) -> Result<i32, std::num::ParseIntError> {
     // FIXME
-    x / y
+    i32::from_str_radix("0000", 2)
 }
 
 /// Converts an integer to an array of "bits" ordered from least significant to most
