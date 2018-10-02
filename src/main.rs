@@ -4,7 +4,9 @@ use std::io;
 use std::io::Write;
 
 fn main() {
-    println!("--Kevin's Quirky Calculator--\nEnter expression (eg. 124 + 12) or q to quit");
+    println!("--Kevin's Quirky Calculator--");
+    println!("Enter expression (eg. 124 + 12) or q to quit");
+    println!("Numbers can span from {} to {}", std::i32::MIN, std::i32::MAX);
 
     loop {
         match get_input() {
