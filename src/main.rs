@@ -78,10 +78,10 @@ fn parse_integer(opt: Option<&str>) -> Option<i32> {
 fn parse_operator(opt: Option<&str>) -> Option<fn(i32, i32) -> Result<i32, std::num::ParseIntError>> {
     match opt {
         Some(s) => match s {
-            "+" => Some(logics::add),
-            "-" => Some(logics::subtract),
-            "*" => Some(logics::multiply),
-            "/" => Some(logics::divide),
+            "+" => Some(logics::operations::add),
+            "-" => Some(logics::operations::subtract),
+            "*" => Some(logics::operations::multiply),
+            "/" => Some(logics::operations::divide),
             _ => None,
         },
         None => None,
