@@ -38,3 +38,22 @@ pub fn divide(x: i32, y: i32) -> Result<i32, ::std::num::ParseIntError> {
     // FIXME
     Ok(x / y)
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::{add};
+
+    #[test]
+    fn add_works_for_positives() {
+        let args = [
+            (0, 1), (0, 100), (0, 500),
+            (1, 2), (1, 200), (1, 200000),
+            (123321, 192392), (98498239, 1238723),
+            (0, ::std::i32::MAX)
+        ];
+        for (x, y) in args.iter() {
+            assert_eq!(add(*x, *y), Ok(x + y));
+        }
+    }
+}
