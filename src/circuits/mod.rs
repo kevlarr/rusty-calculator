@@ -1,11 +1,12 @@
 mod gates;
 
-use super::types::{BitArray};
+use super::types::{Bit, BitArray};
 
-/// Basic circuit for adding "8-bit" arrays ordered least to most significant
+/// Basic, naive implementation of full addition circuit
 pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
     let mut rval = [false; 8];
     let mut carry = false;
+
 
     for i in 0..8 {
         let result = match i {
@@ -21,12 +22,12 @@ pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
 }
 
 /// Single-bit adder circuit for two inputs
-fn half_adder(b1: bool, b2: bool) -> (bool, bool) {
+fn half_adder(b1: Bit, b2: Bit) -> (Bit, Bit) {
     (gates::xor(b1, b2), gates::and(b1, b2))
 }
 
 /// Single-bit adder circuit for three inputs
-fn full_adder(b1: bool, b2: bool, b3: bool) -> (bool, bool) {
+fn full_adder(b1: Bit, b2: Bit, b3: Bit) -> (Bit, Bit) {
     let (sum1, carry1) = half_adder(b1, b2);
     let (sum2, carry2) = half_adder(sum1, b3);
 
