@@ -6,7 +6,7 @@ use std::io::Write;
 fn main() {
     println!("--Kevin's Quirky Calculator--");
     println!("  Enter expression (eg. 124 + 12) or q to quit");
-    println!("  Numbers can span from {} to {}", std::i32::MIN, std::i32::MAX);
+    println!("  Numbers can span from {} to {}", std::i8::MIN, std::i8::MAX);
 
     loop {
         match get_input() {
@@ -65,9 +65,9 @@ fn eval(input: String) {
     };
 }
 
-fn parse_integer(opt: Option<&str>) -> Option<i32> {
+fn parse_integer(opt: Option<&str>) -> Option<i8> {
     match opt {
-        Some(s) => match i32::from_str_radix(s, 10) {
+        Some(s) => match i8::from_str_radix(s, 10) {
             Ok(x) => Some(x),
             Err(_) => None,
         },
@@ -75,7 +75,7 @@ fn parse_integer(opt: Option<&str>) -> Option<i32> {
     }
 }
 
-fn parse_operator(opt: Option<&str>) -> Option<fn(i32, i32) -> Result<i32, std::num::ParseIntError>> {
+fn parse_operator(opt: Option<&str>) -> Option<fn(i8, i8) -> Result<i8, std::num::ParseIntError>> {
     match opt {
         Some(s) => match s {
             "+" => Some(logics::operations::add),
