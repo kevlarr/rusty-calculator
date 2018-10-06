@@ -1,7 +1,7 @@
-use super::{circuits};
+use super::{circuits, types::{BitArray, Num, OperationResult}};
 
 /// Converts an integer to an array of "bits" ordered from least significant to most
-pub fn to_bit_array(x: i8) -> [bool; 8] {
+pub fn to_bit_array(x: Num) -> BitArray {
     // Need 10 chars to represent 8bit, since it adds "0b" to beginning
     let bit_string = format!("{:#010b}", x);
     let mut arr = [false; 8];
@@ -16,7 +16,7 @@ pub fn to_bit_array(x: i8) -> [bool; 8] {
 }
 
 /// Converts an array of "bits" (ordered from least to most significant) to an integer
-pub fn from_bit_array(arr: [bool; 8]) -> Result<i8, ::std::num::ParseIntError> {
+pub fn from_bit_array(arr: BitArray) -> OperationResult {
     println!("arr: {:?}", arr);
 
     // Rust is a little inconsistent with how it handles negative binary numbers...
@@ -49,5 +49,5 @@ pub fn from_bit_array(arr: [bool; 8]) -> Result<i8, ::std::num::ParseIntError> {
 
     println!("s: {}", s);
 
-    i8::from_str_radix(s.as_str(), 2)
+    Num::from_str_radix(s.as_str(), 2)
 }

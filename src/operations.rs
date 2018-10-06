@@ -1,30 +1,35 @@
-use super::{circuits, conversions};
+use super::{
+    circuits, conversions,
+    types::{Circuit, Num, OperationResult}
+};
 
-pub fn add(x: i8, y: i8) -> Result<i8, ::std::num::ParseIntError> {
+pub fn add(x: Num, y: Num) -> OperationResult {
+    run_circuit(circuits::binary_adder, x, y)
+}
+
+pub fn subtract(x: Num, y: Num) -> OperationResult {
+    add(x, -y)
+}
+
+pub fn multiply(x: Num, y: Num) -> OperationResult {
+    // FIXME
+    Ok(x * y)
+}
+
+pub fn divide(x: Num, y: Num) ->  OperationResult {
+    // FIXME
+    Ok(x / y)
+}
+
+fn run_circuit(circuit: Circuit, x: Num, y: Num) -> OperationResult {
     let xb = conversions::to_bit_array(x);
     let yb = conversions::to_bit_array(y);
 
     println!("x: {}\n{:#010b}\n{:?}", x, x, xb);
     println!("y: {}\n{:#010b}\n{:?}", y, y, yb);
 
-    conversions::from_bit_array(
-        circuits::binary_adder(xb, yb))
+    conversions::from_bit_array(circuit(xb, yb))
 }
-
-pub fn subtract(x: i8, y: i8) -> Result<i8, ::std::num::ParseIntError> {
-    add(x, -y)
-}
-
-pub fn multiply(x: i8, y: i8) -> Result<i8, ::std::num::ParseIntError> {
-    // FIXME
-    Ok(x * y)
-}
-
-pub fn divide(x: i8, y: i8) -> Result<i8, ::std::num::ParseIntError> {
-    // FIXME
-    Ok(x / y)
-}
-
 
 #[cfg(test)]
 mod tests {

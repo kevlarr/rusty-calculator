@@ -1,7 +1,9 @@
 mod gates;
 
+use super::types::{BitArray};
+
 /// Basic circuit for adding "8-bit" arrays ordered least to most significant
-pub fn binary_adder(xb: [bool; 8], yb: [bool; 8]) -> [bool; 8] {
+pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
     let mut rval = [false; 8];
     let mut carry = false;
 

@@ -2,6 +2,7 @@ extern crate logics;
 
 use std::io;
 use std::io::Write;
+use logics::types::{Num, OperationResult};
 
 fn main() {
     println!("--Kevin's Quirky Calculator--");
@@ -65,9 +66,9 @@ fn eval(input: String) {
     };
 }
 
-fn parse_integer(opt: Option<&str>) -> Option<i8> {
+fn parse_integer(opt: Option<&str>) -> Option<Num> {
     match opt {
-        Some(s) => match i8::from_str_radix(s, 10) {
+        Some(s) => match Num::from_str_radix(s, 10) {
             Ok(x) => Some(x),
             Err(_) => None,
         },
@@ -75,7 +76,7 @@ fn parse_integer(opt: Option<&str>) -> Option<i8> {
     }
 }
 
-fn parse_operator(opt: Option<&str>) -> Option<fn(i8, i8) -> Result<i8, std::num::ParseIntError>> {
+fn parse_operator(opt: Option<&str>) -> Option<fn(Num, Num) -> OperationResult> {
     match opt {
         Some(s) => match s {
             "+" => Some(logics::operations::add),
