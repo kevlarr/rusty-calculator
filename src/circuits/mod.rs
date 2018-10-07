@@ -7,7 +7,6 @@ pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
     let mut rval = [false; 8];
     let mut carry = false;
 
-
     for i in 0..8 {
         let result = match i {
             0 => half_adder(xb[i], yb[i]),
@@ -19,6 +18,29 @@ pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
     }
 
     rval
+}
+
+/// Basic implementation of multiplier circuit, using unoptimized
+/// series of shifts and adds
+pub fn binary_multiplier(xb: BitArray, yb: BitArray) -> BitArray {
+    let mut accumulator = [false; 8];
+
+    for i in 0..8 {
+        let mut shifted = [false; 8];
+
+        for j in 0..(8 - i) {
+            shifted[j + i] = multiplier(xb[j], yb[i]);
+        }
+
+        accumulator = binary_adder(accumulator, shifted);
+    }
+
+    accumulator
+}
+
+/// Single-bit multiplier circuit
+fn multiplier(b1: Bit, b2: Bit) -> Bit {
+    gates::and(b1, b2)
 }
 
 /// Single-bit adder circuit for two inputs

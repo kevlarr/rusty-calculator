@@ -6,7 +6,6 @@ pub fn to_bit_array(x: Num) -> BitArray {
     let bit_string = format!("{:#010b}", x);
     let mut arr = [false; 8];
 
-    // FIXME use iterators instead of creating arrays
     bit_string.chars().skip(2)
         .map(|c| c == '1')
         .enumerate()
@@ -17,8 +16,6 @@ pub fn to_bit_array(x: Num) -> BitArray {
 
 /// Converts an array of "bits" (ordered from least to most significant) to an integer
 pub fn from_bit_array(arr: BitArray) -> OperationResult {
-    println!("arr: {:?}", arr);
-
     // Rust is a little inconsistent with how it handles negative binary numbers...
     //
     //   - Literals use negative, eg. -0b0000_0011 for -3)

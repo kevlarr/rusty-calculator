@@ -12,8 +12,7 @@ pub fn subtract(x: Num, y: Num) -> OperationResult {
 }
 
 pub fn multiply(x: Num, y: Num) -> OperationResult {
-    // FIXME
-    Ok(x * y)
+    run_circuit(circuits::binary_multiplier, x, y)
 }
 
 pub fn divide(x: Num, y: Num) ->  OperationResult {
@@ -25,10 +24,13 @@ fn run_circuit(circuit: Circuit, x: Num, y: Num) -> OperationResult {
     let xb = conversions::to_bit_array(x);
     let yb = conversions::to_bit_array(y);
 
-    println!("x: {}\n{:#010b}\n{:?}", x, x, xb);
-    println!("y: {}\n{:#010b}\n{:?}", y, y, yb);
+    println!("\nx: {}\n{:#010b}\n{:?}", x, x, xb);
+    println!("\ny: {}\n{:#010b}\n{:?}", y, y, yb);
 
-    conversions::from_bit_array(circuit(xb, yb))
+    let result = circuit(xb, yb);
+    println!("\nr: {:?}", result);
+
+    conversions::from_bit_array(result)
 }
 
 #[cfg(test)]
