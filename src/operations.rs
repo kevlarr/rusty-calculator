@@ -8,7 +8,7 @@ pub fn add(x: Num, y: Num) -> OperationResult {
 }
 
 pub fn subtract(x: Num, y: Num) -> OperationResult {
-    add(x, -y)
+    run_circuit(circuits::binary_subtractor, x, y)
 }
 
 pub fn multiply(x: Num, y: Num) -> OperationResult {
@@ -16,7 +16,6 @@ pub fn multiply(x: Num, y: Num) -> OperationResult {
 }
 
 pub fn divide(x: Num, y: Num) ->  OperationResult {
-    // FIXME
     Ok(x / y)
 }
 

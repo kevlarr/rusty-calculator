@@ -20,22 +20,37 @@ pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
     rval
 }
 
-/// Basic implementation of multiplier circuit, using unoptimized
-/// series of shifts and adds
+/// Subtractor that takes complement of yb and adds to xb
+pub fn binary_subtractor(xb: BitArray, yb: BitArray) -> BitArray {
+    binary_adder(xb, complement(yb))
+}
+
+/// Multiplier that uses naive, unoptimized series of shifts and adding partial products
 pub fn binary_multiplier(xb: BitArray, yb: BitArray) -> BitArray {
     let mut accumulator = [false; 8];
 
     for i in 0..8 {
-        let mut shifted = [false; 8];
+        let mut partial = [false; 8];
 
         for j in 0..(8 - i) {
-            shifted[j + i] = multiplier(xb[j], yb[i]);
+            partial[j + i] = multiplier(xb[j], yb[i]);
         }
 
-        accumulator = binary_adder(accumulator, shifted);
+        accumulator = binary_adder(accumulator, partial);
     }
 
     accumulator
+}
+
+/// Inverts the sign of a number by flipping bits and adding 1
+pub fn complement(b: BitArray) -> BitArray {
+    let mut flipped = [false; 8];
+
+    for i in 0..8 {
+        flipped[i] = !b[i];
+    }
+
+    binary_adder(flipped, [true, false, false, false, false, false, false, false])
 }
 
 /// Single-bit multiplier circuit

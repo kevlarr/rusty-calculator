@@ -29,14 +29,9 @@ pub fn from_bit_array(arr: BitArray) -> OperationResult {
     let mut arr_to_convert = arr;
 
     if arr[7] {
+        // Is negative so take complement to make "positive" and then add sign
         s.push('-');
-
-        // Is negative, so subtract one, flip bits, and add sign to str before parsing
-        arr_to_convert = circuits::binary_adder(arr, [true; 8]);
-
-        for i in 0..8 {
-            arr_to_convert[i] = !arr_to_convert[i];
-        }
+        arr_to_convert = circuits::complement(arr);
     }
 
     // Run through bit array and push chars onto string, reversing order of bits
