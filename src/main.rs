@@ -7,7 +7,7 @@ use logics::types::{Num, OperationResult};
 fn main() {
     println!("--Kevin's Quirky Calculator--");
     println!("  Enter expression (eg. 124 + 12) or q to quit");
-    println!("  Numbers can span from {} to {}", std::i8::MIN, std::i8::MAX);
+    println!("  Numbers can span from {} to {}", std::i64::MIN, std::i64::MAX);
 
     loop {
         match get_input() {

@@ -4,10 +4,10 @@ use super::types::{Bit, BitArray};
 
 /// Basic, naive implementation of full addition circuit
 pub fn binary_adder(xb: BitArray, yb: BitArray) -> BitArray {
-    let mut rval = [false; 8];
+    let mut rval = [false; 64];
     let mut carry = false;
 
-    for i in 0..8 {
+    for i in 0..64 {
         let result = match i {
             0 => half_adder(xb[i], yb[i]),
             _ => full_adder(xb[i], yb[i], carry),
@@ -27,12 +27,12 @@ pub fn binary_subtractor(xb: BitArray, yb: BitArray) -> BitArray {
 
 /// Multiplier that uses naive, unoptimized series of shifts and adding partial products
 pub fn binary_multiplier(xb: BitArray, yb: BitArray) -> BitArray {
-    let mut accumulator = [false; 8];
+    let mut accumulator = [false; 64];
 
-    for i in 0..8 {
-        let mut partial = [false; 8];
+    for i in 0..64 {
+        let mut partial = [false; 64];
 
-        for j in 0..(8 - i) {
+        for j in 0..(64- i) {
             partial[j + i] = multiplier(xb[j], yb[i]);
         }
 
@@ -44,13 +44,16 @@ pub fn binary_multiplier(xb: BitArray, yb: BitArray) -> BitArray {
 
 /// Inverts the sign of a number by flipping bits and adding 1
 pub fn complement(b: BitArray) -> BitArray {
-    let mut flipped = [false; 8];
+    let mut flipped = [false; 64];
 
-    for i in 0..8 {
+    for i in 0..64 {
         flipped[i] = !b[i];
     }
 
-    binary_adder(flipped, [true, false, false, false, false, false, false, false])
+    let mut one = [false; 64];
+    one[0] = true;
+
+    binary_adder(flipped, one)
 }
 
 /// Single-bit multiplier circuit
