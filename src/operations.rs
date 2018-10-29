@@ -23,8 +23,8 @@ fn run_circuit(circuit: Circuit, x: Num, y: Num) -> OperationResult {
     let xb = conversions::to_bit_array(x);
     let yb = conversions::to_bit_array(y);
 
-    // println!("\nx: {}\n{:#010b}\n{:?}", x, x, xb);
-    // println!("\ny: {}\n{:#010b}\n{:?}", y, y, yb);
+    println!("\nx: {}\n{:#010b}\n{:?}", x, x, xb);
+    println!("\ny: {}\n{:#010b}\n{:?}", y, y, yb);
 
     let result = circuit(xb, yb);
     // println!("\nr: {:?}", result);
@@ -35,7 +35,7 @@ fn run_circuit(circuit: Circuit, x: Num, y: Num) -> OperationResult {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_add() {
+    fn add_test() {
         let args = [
             (0, 0), (0, 1), (0, 100), (0, 500),
             (1, 2), (1, 200), (1, 200000),
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn test_subtract() {
+    fn subtract_test() {
         let args = [
             (0, 1), (0, 100), (0, 500),
             (1, 2), (1, 200), (1, 200000),
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multiply() {
+    fn multiply_test() {
         let args = [
             (0, 0), (0, 1), (1, 0),
             (0, -1), (-1, 0), (1, -1),

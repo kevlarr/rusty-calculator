@@ -1,21 +1,21 @@
-use super::{circuits, types::{BitArray, Num, OperationResult}};
+use super::{circuits, types::{Bit, BitArray, Num, OperationResult}};
 
 /// Converts an integer to an array of "bits" ordered from least significant to most
 pub fn to_bit_array(x: Num) -> BitArray {
     // Need 66 chars to represent 64bit, since it adds "0b" to beginning
     let bit_string = format!("{:#066b}", x);
-    let mut arr = [false; 64];
+    let mut ba = BitArray::zero();
 
     bit_string.chars().skip(2)
-        .map(|c| c == '1')
+        .map(|c| if c == '1' { Bit::On } else { Bit::Off })
         .enumerate()
-        .for_each(|(i, bit)| arr[63 - i] = bit);
+        .for_each(|(i, bit)| ba.set(63 - i, bit));
 
-    arr
+    ba
 }
 
 /// Converts an array of "bits" (ordered from least to most significant) to an integer
-pub fn from_bit_array(arr: BitArray) -> OperationResult {
+pub fn from_bit_array(ba: BitArray) -> OperationResult {
     // Rust is a little inconsistent with how it handles negative binary numbers...
     //
     //   - Literals use negative, eg. -0b0000_0011 for -3)
@@ -28,20 +28,54 @@ pub fn from_bit_array(arr: BitArray) -> OperationResult {
 
     // Capacity should fit full number and potentially "-" sign
     let mut s = String::with_capacity(65);
-    let mut arr_to_convert = arr;
+    let mut to_convert = ba;
 
-    if arr[63] {
-        // Is negative so take complement to make "positive" and then add sign
+    if to_convert.is_negative() {
+        // Take complement to make "positive" and then add sign
         s.push('-');
-        arr_to_convert = circuits::complement(arr);
+        to_convert = circuits::complement(to_convert);
     }
 
     // Run through bit array and push chars onto string, reversing order of bits
     for i in 0..64 {
-        s.push(if arr_to_convert[63 - i] { '1' } else { '0' });
+        s.push(if to_convert.is_on(63 - i) { '1' } else { '0' });
     }
 
-    // println!("s: {}", s);
-
     Num::from_str_radix(s.as_str(), 2)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Bit, BitArray};
+
+    #[test]
+    fn to_bit_array_test() {
+        let zero = BitArray::zero();
+        let one = BitArray::one();
+        let negative_one = BitArray::of(Bit::On);
+
+        let min = {
+            let mut ba = BitArray::of(Bit::Off);
+            ba.set(63, Bit::On);
+            ba
+        };
+
+        let max = {
+            let mut ba = BitArray::of(Bit::On);
+            ba.set(63, Bit::Off);
+            ba
+        };
+
+        assert_eq!(super::to_bit_array(0), zero, "0");
+        assert_eq!(super::to_bit_array(1), one, "1");
+        assert_eq!(super::to_bit_array(-1), negative_one, "-1");
+        assert_eq!(super::to_bit_array(-9223372036854775808), min, "min");
+        assert_eq!(super::to_bit_array(9223372036854775807), max, "max");
+
+    }
+
+    #[test]
+    fn from_bit_array_test() {
+
+    }
 }
