@@ -5,7 +5,7 @@ use std::io::Write;
 use logics::types::{Num, OperationResult};
 
 fn main() {
-    println!("--Kevin's Quirky Calculator--");
+    println!("--Kevin's Rusty Calculator--");
     println!("  Enter expression (eg. 124 + 12) or q to quit");
     println!("  Numbers can span from {} to {}", std::i64::MIN, std::i64::MAX);
 
