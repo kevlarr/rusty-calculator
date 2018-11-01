@@ -79,10 +79,10 @@ fn parse_integer(opt: Option<&str>) -> Option<Num> {
 fn parse_operator(opt: Option<&str>) -> Option<fn(Num, Num) -> OperationResult> {
     match opt {
         Some(s) => match s {
-            "+" => Some(logics::operations::add),
-            "-" => Some(logics::operations::subtract),
-            "*" => Some(logics::operations::multiply),
-            "/" => Some(logics::operations::divide),
+            "+" => Some(logics::add),
+            "-" => Some(logics::subtract),
+            "*" => Some(logics::multiply),
+            "/" => Some(logics::divide),
             _ => None,
         },
         None => None,
