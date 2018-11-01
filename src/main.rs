@@ -1,8 +1,8 @@
-extern crate logics;
+extern crate rustycalc;
 
 use std::io;
 use std::io::Write;
-use logics::types::{Num, OperationResult};
+use rustycalc::types::{Num, OperationResult};
 
 fn main() {
     println!("--Kevin's Rusty Calculator--");
@@ -79,10 +79,10 @@ fn parse_integer(opt: Option<&str>) -> Option<Num> {
 fn parse_operator(opt: Option<&str>) -> Option<fn(Num, Num) -> OperationResult> {
     match opt {
         Some(s) => match s {
-            "+" => Some(logics::add),
-            "-" => Some(logics::subtract),
-            "*" => Some(logics::multiply),
-            "/" => Some(logics::divide),
+            "+" => Some(rustycalc::add),
+            "-" => Some(rustycalc::subtract),
+            "*" => Some(rustycalc::multiply),
+            "/" => Some(rustycalc::divide),
             _ => None,
         },
         None => None,
