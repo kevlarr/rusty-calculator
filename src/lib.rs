@@ -1,21 +1,29 @@
+use ::std::ops::{Add, Div, Mul, Sub};
+
 pub mod types;
 
 use types::{Binary, ConversionResult};
 
 pub fn add(x: i64, y: i64) -> ConversionResult {
-    (Binary::from_int(x) + Binary::from_int(y)).to_int()
+    execute(Binary::add, x, y)
 }
 
 pub fn subtract(x: i64, y: i64) -> ConversionResult {
-    (Binary::from_int(x) - Binary::from_int(y)).to_int()
+    execute(Binary::sub, x, y)
 }
 
 pub fn multiply(x: i64, y: i64) -> ConversionResult {
-    (Binary::from_int(x) * Binary::from_int(y)).to_int()
+    execute(Binary::mul, x, y)
 }
 
 pub fn divide(x: i64, y: i64) ->  ConversionResult {
-    (Binary::from_int(x) / Binary::from_int(y)).to_int()
+    execute(Binary::div, x, y)
+}
+
+fn execute(f: fn(Binary, Binary) -> Binary, x: i64, y: i64) -> ConversionResult {
+    let result = f(Binary::from_int(x), Binary::from_int(y));
+    println!("\nResult\n{:?}", result);
+    result.to_int()
 }
 
 #[cfg(test)]
