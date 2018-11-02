@@ -11,3 +11,11 @@ With Rust 1.29.0 and `cargo` installed:
 2. `cd rusty-calc`
 3. `cargo run`
 4. Make fun of it
+
+## TODO
+
+- [x] Add
+- [x] Subtract
+- [x] Multiply
+- [ ] Divide
+- [ ] Exponentiation?
