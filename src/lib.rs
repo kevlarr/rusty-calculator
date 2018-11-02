@@ -1,20 +1,20 @@
 pub mod types;
 
-use types::{Binary, Num, OperationResult};
+use types::{Binary, ConversionResult};
 
-pub fn add(x: Num, y: Num) -> OperationResult {
+pub fn add(x: i64, y: i64) -> ConversionResult {
     (Binary::from_int(x) + Binary::from_int(y)).to_int()
 }
 
-pub fn subtract(x: Num, y: Num) -> OperationResult {
+pub fn subtract(x: i64, y: i64) -> ConversionResult {
     (Binary::from_int(x) - Binary::from_int(y)).to_int()
 }
 
-pub fn multiply(x: Num, y: Num) -> OperationResult {
+pub fn multiply(x: i64, y: i64) -> ConversionResult {
     (Binary::from_int(x) * Binary::from_int(y)).to_int()
 }
 
-pub fn divide(x: Num, y: Num) ->  OperationResult {
+pub fn divide(x: i64, y: i64) ->  ConversionResult {
     (Binary::from_int(x) / Binary::from_int(y)).to_int()
 }
 

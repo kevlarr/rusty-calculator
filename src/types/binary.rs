@@ -2,7 +2,7 @@ use ::std::cmp::PartialEq;
 use ::std::fmt;
 use ::std::ops::{Add, Div, Mul, Sub};
 
-use super::{Bit, Num, OperationResult};
+use super::{Bit, ConversionResult};
 
 
 /// Binary: Sequence of Bits, ordered from least to most significant
@@ -10,8 +10,25 @@ pub struct Binary([Bit; 64]);
 
 impl Binary {
 
-    /// Construct a binary from a given Num
-    pub fn from_int(n: Num) -> Binary {
+    /// Create a Binary filled with provided Bit
+	pub fn of(b: Bit) -> Binary {
+		Binary([b; 64])
+	}
+
+    /// Create a Binary representing 0
+	pub fn zero() -> Binary {
+		Binary::of(Bit::Off)
+	}
+
+    /// Create a Binary representing 1
+	pub fn one() -> Binary {
+		let mut binary = Binary::zero();
+		binary.set(0, Bit::On);
+		binary
+	}
+
+    /// Create a Binary from an int
+    pub fn from_int(n: i64) -> Binary {
         // Need 66 chars to represent 64bit, since it adds "0b" to beginning
         let bit_string = format!("{:#066b}", n);
         let mut binary = Binary::zero();
@@ -25,8 +42,8 @@ impl Binary {
         binary
     }
 
-    /// Parse own bits into a Num
-    pub fn to_int(self) -> OperationResult {
+    /// Attempt to convert Binary to an int
+    pub fn to_int(self) -> ConversionResult {
         // Rust is a little inconsistent with how it handles negative binary numbers...
         //
         //   - Literals use negative, eg. -0b0000_0011 for -3)
@@ -52,31 +69,20 @@ impl Binary {
             s.push(if binary.is_on_at(63 - i) { '1' } else { '0' });
         }
 
-        Num::from_str_radix(s.as_str(), 2)
+        i64::from_str_radix(s.as_str(), 2)
     }
 
-	pub fn of(b: Bit) -> Binary {
-		Binary([b; 64])
-	}
-
-	pub fn zero() -> Binary {
-		Binary::of(Bit::Off)
-	}
-
-	pub fn one() -> Binary {
-		let mut binary = Binary::zero();
-		binary.set(0, Bit::On);
-		binary
-	}
-
+    /// Returns Bit at given position
 	pub fn get(&self, i: usize) -> Bit {
 		self.0[i]
 	}
 
+    /// Sets Bit at given position
 	pub fn set(&mut self, i: usize, b: Bit) {
 		self.0[i] = b;
 	}
 
+    /// Returns whether or not Bit at given position is on
 	pub fn is_on_at(&self, i: usize) -> bool {
 		match self.0[i] {
 			Bit::On => true,
@@ -84,6 +90,7 @@ impl Binary {
 		}
 	}
 
+    /// Returns whether or not Binary represents negative number
 	pub fn is_negative(&self) -> bool {
 		self.is_on_at(63)
 	}

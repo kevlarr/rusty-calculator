@@ -9,6 +9,7 @@ pub enum Bit { Off, On }
 use self::Bit::*;
 
 impl Bit {
+
     /// Single-bit adder circuit for two inputs
     pub fn half_adder(b1: Bit, b2: Bit) -> (Bit, Bit) {
         (b1 ^ b2, b1 & b2)
