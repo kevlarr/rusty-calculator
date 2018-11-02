@@ -106,9 +106,18 @@ impl Binary {
     }
 }
 
+// FIXME this and to_int should share some codez?
 impl fmt::Debug for Binary {
-	fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        self.0[..].fmt(formatter)
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "0b");
+
+        for i in 0..64 {
+            if i % 4 == 0 {
+                write!(f, "_");
+            }
+            self.get(i).fmt(f)?
+        }
+        Ok(())
     }
 }
 
