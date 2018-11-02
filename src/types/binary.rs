@@ -23,7 +23,7 @@ impl Binary {
     /// Create a Binary representing 1
 	pub fn one() -> Binary {
 		let mut binary = Binary::zero();
-		binary.set(0, Bit::On);
+		binary.set(63, Bit::On);
 		binary
 	}
 
@@ -36,7 +36,7 @@ impl Binary {
         bit_string.chars().skip(2)
             .map(|c| if c == '1' { Bit::On } else { Bit::Off })
             .enumerate()
-            .for_each(|(i, bit)| binary.set(63 - i, bit));
+            .for_each(|(i, bit)| binary.set(i, bit));
 
         println!("\nx: {}\n{:#010b}\n{:?}", n, n, binary);
         binary
@@ -64,9 +64,8 @@ impl Binary {
             binary = binary.complement();
         }
 
-        // Run through bit array and push chars onto string, reversing order of bits
         for i in 0..64 {
-            s.push(if binary.is_on_at(63 - i) { '1' } else { '0' });
+            s.push(if binary.is_on_at(i) { '1' } else { '0' });
         }
 
         i64::from_str_radix(s.as_str(), 2)
@@ -92,7 +91,7 @@ impl Binary {
 
     /// Returns whether or not Binary represents negative number
 	pub fn is_negative(&self) -> bool {
-		self.is_on_at(63)
+		self.is_on_at(0)
 	}
 
     /// Inverts the sign of a Binary by flipping bits and adding 1
@@ -133,9 +132,9 @@ impl Add for Binary {
         let mut rval = Binary::zero();
         let mut carry = Bit::Off;
 
-        for i in 0..64 {
+        for i in (0..64).rev() {
             let result = match i {
-                0 => Bit::half_adder(self.get(i), other.get(i)),
+                63 => Bit::half_adder(self.get(i), other.get(i)),
                 _ => Bit::full_adder(self.get(i), other.get(i), carry),
             };
 
@@ -163,11 +162,23 @@ impl Mul for Binary {
     fn mul(self, other: Binary) -> Binary {
         let mut accumulator = Binary::zero();
 
-        for i in 0..64 {
+        // For each Bit in the multiplier, starting at least significant...
+        for i in (0..64).rev() {
+            let multiplier = other.get(i);
+
+            // ... create a zeroed Binary to hold the partial product...
             let mut partial = Binary::zero();
 
-            for j in 0..(64 - i) {
-                partial.set(j + i, Bit::multiplier(self.get(j), other.get(i)));
+            // ... and then iterate through each Bit in multiplicand,
+            // starting with least significant (truncating off more
+            // significant Bits as necessary due to storage size)...
+            for j in ((63 - i)..64).rev() {
+                let product = Bit::multiplier(self.get(j), multiplier);
+
+                // ... and with each multiplier, the index for where the least
+                // significant Bit gets copied into the partial shifts more and
+                // more to the left...
+                partial.set(j - (63 - i), product);
             }
 
             accumulator = accumulator + partial;
@@ -198,13 +209,13 @@ mod tests {
 
         let min = {
             let mut ba = Binary::of(Bit::Off);
-            ba.set(63, Bit::On);
+            ba.set(0, Bit::On);
             ba
         };
 
         let max = {
             let mut ba = Binary::of(Bit::On);
-            ba.set(63, Bit::Off);
+            ba.set(0, Bit::Off);
             ba
         };
 
@@ -223,13 +234,13 @@ mod tests {
 
         let min = {
             let mut ba = Binary::of(Bit::Off);
-            ba.set(63, Bit::On);
+            ba.set(0, Bit::On);
             ba
         };
 
         let max = {
             let mut ba = Binary::of(Bit::On);
-            ba.set(63, Bit::Off);
+            ba.set(0, Bit::Off);
             ba
         };
 
