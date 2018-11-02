@@ -21,8 +21,15 @@ pub fn divide(x: i64, y: i64) ->  ConversionResult {
 }
 
 fn execute(f: fn(Binary, Binary) -> Binary, x: i64, y: i64) -> ConversionResult {
-    let result = f(Binary::from_int(x), Binary::from_int(y));
-    println!("\nResult\n{:?}", result);
+    let bx = Binary::from_int(x);
+    let by = Binary::from_int(y);
+
+    println!("{:?}\n{}\n", bx, x);
+    println!("{:?}\n{}\n", by, y);
+
+    let result = f(bx, by);
+    println!("{:?}", result);
+
     result.to_int()
 }
 

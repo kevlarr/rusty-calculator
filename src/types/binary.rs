@@ -38,7 +38,6 @@ impl Binary {
             .enumerate()
             .for_each(|(i, bit)| binary.set(i, bit));
 
-        println!("\nx: {}\n{:#010b}\n{:?}", n, n, binary);
         binary
     }
 
