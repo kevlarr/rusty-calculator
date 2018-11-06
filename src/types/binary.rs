@@ -2,7 +2,7 @@ use ::std::cmp::PartialEq;
 use ::std::fmt;
 use ::std::ops::{Add, Div, Mul, Sub};
 
-use super::{Bit, ConversionResult};
+use super::{Bit, ParseResult};
 
 
 /// Binary: Sequence of Bits, ordered from least to most significant
@@ -42,7 +42,7 @@ impl Binary {
     }
 
     /// Attempt to convert Binary to an int
-    pub fn to_int(self) -> ConversionResult {
+    pub fn to_int(self) -> ParseResult {
         // Rust is a little inconsistent with how it handles negative binary numbers...
         //
         //   - Literals use negative, eg. -0b0000_0011 for -3)

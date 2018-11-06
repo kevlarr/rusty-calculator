@@ -2,7 +2,7 @@ extern crate rustycalc;
 
 use std::io;
 use std::io::Write;
-use rustycalc::types::Calculation;
+use rustycalc::types::Operation;
 
 fn main() {
     println!("--Kevin's Rusty Calculator--");
@@ -76,7 +76,7 @@ fn parse_integer(opt: Option<&str>) -> Option<i64> {
     }
 }
 
-fn parse_operator(opt: Option<&str>) -> Option<Calculation> {
+fn parse_operator(opt: Option<&str>) -> Option<Operation> {
     match opt {
         Some(s) => match s {
             "+" => Some(rustycalc::add),
