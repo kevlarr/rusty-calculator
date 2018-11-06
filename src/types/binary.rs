@@ -94,14 +94,14 @@ impl Binary {
 	}
 
     /// Inverts the sign of a Binary by flipping bits and adding 1
-    pub fn complement(self) -> Binary {
+    pub fn complement(&self) -> Binary {
         let mut comp = Binary::zero();
 
         for i in 0..64 {
             comp.set(i, !self.get(i));
         }
 
-        comp + Binary::one()
+        &comp + &Binary::one()
     }
 }
 
@@ -132,11 +132,11 @@ impl PartialEq for Binary {
 	}
 }
 
-impl Add for Binary {
+impl<'a, 'b> Add<&'b Binary> for &'a Binary {
     type Output = Binary;
 
     /// Basic implementation of full addition circuit
-    fn add(self, other: Binary) -> Binary {
+    fn add(self, other: &'b Binary) -> Binary {
         let mut rval = Binary::zero();
         let mut carry = Bit::Off;
 
@@ -154,20 +154,20 @@ impl Add for Binary {
     }
 }
 
-impl Sub for Binary {
+impl<'a, 'b> Sub<&'b Binary> for &'a Binary {
     type Output = Binary;
 
     /// Simple subtractor that takes complement of other and adds to self
-    fn sub(self, other: Binary) -> Binary {
-        self + other.complement()
+    fn sub(self, other: &'b Binary) -> Binary {
+        self + &other.complement()
     }
 }
 
-impl Mul for Binary {
+impl<'a, 'b> Mul<&'b Binary> for &'a Binary {
     type Output = Binary;
 
     /// Multiplier that uses basic series of shifts and adding partial products
-    fn mul(self, other: Binary) -> Binary {
+    fn mul(self, other: &'b Binary) -> Binary {
         let mut accumulator = Binary::zero();
 
         // For each Bit in the multiplier, starting at least significant...
@@ -189,18 +189,18 @@ impl Mul for Binary {
                 partial.set(j - (63 - i), product);
             }
 
-            accumulator = accumulator + partial;
+            accumulator = &accumulator + &partial;
         }
 
         accumulator
     }
 }
 
-impl Div for Binary {
+impl<'a, 'b> Div<&'b Binary> for &'a Binary {
     type Output = Binary;
 
-    fn div(self, other: Binary) -> Binary {
-        other
+    fn div(self, _other: &'b Binary) -> Binary {
+        Binary::zero()
     }
 }
 
