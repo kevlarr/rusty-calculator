@@ -1,13 +1,17 @@
 extern crate rustycalc;
 
+use rustycalc::types::Operation;
 use std::io;
 use std::io::Write;
-use rustycalc::types::Operation;
 
 fn main() {
     println!("--Kevin's Rusty Calculator--");
     println!("  Enter expression (eg. 124 + 12) or q to quit");
-    println!("  Numbers can span from {} to {}", std::i64::MIN, std::i64::MAX);
+    println!(
+        "  Numbers can span from {} to {}",
+        std::i64::MIN,
+        std::i64::MAX
+    );
 
     loop {
         match get_input() {
@@ -37,21 +41,21 @@ fn eval(input: String) {
         None => {
             println!("Error: Must supply valid left-hand argument");
             return;
-        },
+        }
     };
     let operator = match parse_operator(pieces.next()) {
         Some(op) => op,
         None => {
             println!("Error: Must supply valid operator");
             return;
-        },
+        }
     };
     let right_hand = match parse_integer(pieces.next()) {
         Some(x) => x,
         None => {
             println!("Error: Must supply valid right-hand argument");
             return;
-        },
+        }
     };
 
     // ... and to be a proper expression there shouldn't be anything left

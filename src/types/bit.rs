@@ -1,15 +1,16 @@
-use ::std::fmt;
-use ::std::ops::{BitAnd, BitOr, BitXor, Not};
-
+use std::fmt;
+use std::ops::{BitAnd, BitOr, BitXor, Not};
 
 /// Bit: Representation of a transistor, either on or off
 #[derive(Copy, Clone, PartialEq)]
-pub enum Bit { Off, On }
+pub enum Bit {
+    Off,
+    On,
+}
 
 use self::Bit::*;
 
 impl Bit {
-
     /// Single-bit adder circuit for two inputs
     pub fn half_adder(b1: Bit, b2: Bit) -> (Bit, Bit) {
         (b1 ^ b2, b1 & b2)
@@ -30,55 +31,58 @@ impl Bit {
 }
 
 impl fmt::Debug for Bit {
-	fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-		match self {
-			Off => 0.fmt(formatter),
-			On  => 1.fmt(formatter),
-		}
-	}
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Off => 0.fmt(formatter),
+            On => 1.fmt(formatter),
+        }
+    }
 }
 
 impl BitAnd for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn bitand(self, other: Self) -> Self {
-		match (self, other) {
-			(On, On) => On,
-			_ => Off,
-		}
-	}
+    fn bitand(self, other: Self) -> Self {
+        match (self, other) {
+            (On, On) => On,
+            _ => Off,
+        }
+    }
 }
 
 impl BitOr for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn bitor(self, other: Self) -> Self {
-		match (self, other) {
-			(On, _) | (_, On) => On,
-			_ => Off,
-		}
-	}
+    fn bitor(self, other: Self) -> Self {
+        match (self, other) {
+            (On, _) | (_, On) => On,
+            _ => Off,
+        }
+    }
 }
 
 impl BitXor for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn bitxor(self, other: Self) -> Self {
-		if self == other { Off } else { On }
-	}
+    fn bitxor(self, other: Self) -> Self {
+        if self == other {
+            Off
+        } else {
+            On
+        }
+    }
 }
 
 impl Not for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn not(self) -> Self {
-		match self {
-			Off => On,
-			On  => Off,
-		}
-	}
+    fn not(self) -> Self {
+        match self {
+            Off => On,
+            On => Off,
+        }
+    }
 }
-
 
 #[cfg(test)]
 mod tests {

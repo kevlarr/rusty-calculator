@@ -1,31 +1,29 @@
-use ::std::cmp::PartialEq;
-use ::std::fmt;
-use ::std::ops::{Add, Div, Mul, Sub};
+use std::cmp::PartialEq;
+use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
 
 use super::{Bit, ParseResult};
-
 
 /// Binary: Sequence of Bits, ordered from least to most significant
 pub struct Binary([Bit; 64]);
 
 impl Binary {
-
     /// Create a Binary filled with provided Bit
-	pub fn of(b: Bit) -> Binary {
-		Binary([b; 64])
-	}
+    pub fn of(b: Bit) -> Binary {
+        Binary([b; 64])
+    }
 
     /// Create a Binary representing 0
-	pub fn zero() -> Binary {
-		Binary::of(Bit::Off)
-	}
+    pub fn zero() -> Binary {
+        Binary::of(Bit::Off)
+    }
 
     /// Create a Binary representing 1
-	pub fn one() -> Binary {
-		let mut binary = Binary::zero();
-		binary.set(63, Bit::On);
-		binary
-	}
+    pub fn one() -> Binary {
+        let mut binary = Binary::zero();
+        binary.set(63, Bit::On);
+        binary
+    }
 
     /// Create a Binary from an int
     pub fn from_int(n: i64) -> Binary {
@@ -33,7 +31,9 @@ impl Binary {
         let bit_string = format!("{:#066b}", n);
         let mut binary = Binary::zero();
 
-        bit_string.chars().skip(2)
+        bit_string
+            .chars()
+            .skip(2)
             .map(|c| if c == '1' { Bit::On } else { Bit::Off })
             .enumerate()
             .for_each(|(i, bit)| binary.set(i, bit));
@@ -71,27 +71,27 @@ impl Binary {
     }
 
     /// Returns Bit at given position
-	pub fn get(&self, i: usize) -> Bit {
-		self.0[i]
-	}
+    pub fn get(&self, i: usize) -> Bit {
+        self.0[i]
+    }
 
     /// Sets Bit at given position
-	pub fn set(&mut self, i: usize, b: Bit) {
-		self.0[i] = b;
-	}
+    pub fn set(&mut self, i: usize, b: Bit) {
+        self.0[i] = b;
+    }
 
     /// Returns whether or not Bit at given position is on
-	pub fn is_on_at(&self, i: usize) -> bool {
-		match self.0[i] {
-			Bit::On => true,
-			_ => false,
-		}
-	}
+    pub fn is_on_at(&self, i: usize) -> bool {
+        match self.0[i] {
+            Bit::On => true,
+            _ => false,
+        }
+    }
 
     /// Returns whether or not Binary represents negative number
-	pub fn is_negative(&self) -> bool {
-		self.is_on_at(0)
-	}
+    pub fn is_negative(&self) -> bool {
+        self.is_on_at(0)
+    }
 
     /// Inverts the sign of a Binary by flipping bits and adding 1
     pub fn complement(&self) -> Binary {
@@ -107,7 +107,7 @@ impl Binary {
 
 // FIXME this and to_int should share some codez?
 impl fmt::Debug for Binary {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "0b");
 
         for i in 0..64 {
@@ -121,15 +121,15 @@ impl fmt::Debug for Binary {
 }
 
 impl PartialEq for Binary {
-	fn eq(&self, other: &Binary) -> bool {
-		for i in 0..63 {
-			if self.get(i) != other.get(i) {
-				return false;
-			}
-		}
+    fn eq(&self, other: &Binary) -> bool {
+        for i in 0..63 {
+            if self.get(i) != other.get(i) {
+                return false;
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 }
 
 impl<'a, 'b> Add<&'b Binary> for &'a Binary {
@@ -204,10 +204,9 @@ impl<'a, 'b> Div<&'b Binary> for &'a Binary {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{Bit, Binary};
+    use super::{Binary, Bit};
 
     #[test]
     fn from_int_test() {
