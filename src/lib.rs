@@ -23,9 +23,9 @@ fn execute(f: fn(&Binary, &Binary) -> Binary, x: i64, y: i64) -> ParseResult {
     let by = Binary::from_int(y);
     let result = f(&bx, &by);
 
-    println!("{:?}\n{}\n", bx, x);
-    println!("{:?}\n{}\n", by, y);
-    println!("{:?}", result);
+    //println!("{:?}\n{}\n", bx, x);
+    //println!("{:?}\n{}\n", by, y);
+    //println!("{:?}", result);
 
     result.to_int()
 }
@@ -89,6 +89,22 @@ mod tests {
 
         for (x, y) in args.iter() {
             assert_eq!(super::multiply(*x, *y), Ok(x * y), "{} * {}", x, y);
+        }
+    }
+
+    #[test]
+    fn divide_test() {
+        let args = [
+            (10, 4), (4, 2), (123, 13), (13, 123),
+            (0, 1), (0, 1), (1, 1),
+            (0, -1), (-1, 1), (1, -1), (3, 5),
+            (1023, 983298), (9183032, 9283983),
+            (-51923, -938983), (-98329838, -29389238),
+            (29389, -9238982), (-9238983, 928392838)
+        ];
+
+        for (x, y) in args.iter() {
+            assert_eq!(super::divide(*x, *y), Ok(x / y), "{} * {}", x, y);
         }
     }
 }

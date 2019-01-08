@@ -1,10 +1,14 @@
 use ::std::fmt;
 use ::std::ops::{BitAnd, BitOr, BitXor, Not};
+use ::std::cmp::{Ordering, PartialOrd};
 
 
 /// Bit: Representation of a transistor, either on or off
 #[derive(Copy, Clone, PartialEq)]
-pub enum Bit { Off, On }
+pub enum Bit {
+    Off,
+    On,
+}
 
 use self::Bit::*;
 
@@ -36,6 +40,18 @@ impl fmt::Debug for Bit {
 			On  => 1.fmt(formatter),
 		}
 	}
+}
+
+impl PartialOrd for Bit {
+    fn partial_cmp(&self, other: &Bit) -> Option<Ordering> {
+        Some(if self == other {
+            Ordering::Equal
+        } else if *self == Bit::On && *other == Bit::Off {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        })
+    }
 }
 
 impl BitAnd for Bit {

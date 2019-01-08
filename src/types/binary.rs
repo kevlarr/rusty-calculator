@@ -1,11 +1,11 @@
 use ::std::cmp::PartialEq;
 use ::std::fmt;
-use ::std::ops::{Add, Div, Mul, Sub};
+use ::std::ops::{Add, Div, Mul, Shl, Shr, Sub};
 
 use super::{Bit, ParseResult};
 
 
-/// Binary: Sequence of Bits, ordered from least to most significant
+/// Binary: Sequence of Bits, ordered from most to least significant
 pub struct Binary([Bit; 64]);
 
 impl Binary {
@@ -93,6 +93,17 @@ impl Binary {
 		self.is_on_at(0)
 	}
 
+    /// Returns ownership for a new copy of self
+    pub fn copy(&self) -> Binary {
+        let mut copy = Binary::zero();
+
+        for i in 0..64 {
+            copy.set(i, self.get(i));
+        }
+
+        copy
+    }
+
     /// Inverts the sign of a Binary by flipping bits and adding 1
     pub fn complement(&self) -> Binary {
         let mut comp = Binary::zero();
@@ -108,11 +119,11 @@ impl Binary {
 // FIXME this and to_int should share some codez?
 impl fmt::Debug for Binary {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "0b");
+        write!(f, "0b").unwrap();
 
         for i in 0..64 {
             if i % 4 == 0 {
-                write!(f, "_");
+                write!(f, "_").unwrap();
             }
             self.get(i).fmt(f)?
         }
@@ -122,7 +133,7 @@ impl fmt::Debug for Binary {
 
 impl PartialEq for Binary {
 	fn eq(&self, other: &Binary) -> bool {
-		for i in 0..63 {
+		for i in 0..64 {
 			if self.get(i) != other.get(i) {
 				return false;
 			}
@@ -130,6 +141,34 @@ impl PartialEq for Binary {
 
 		return true;
 	}
+}
+
+impl Shl<usize> for &Binary {
+    type Output = Binary;
+
+    fn shl(self, rhs: usize) -> Binary {
+        let mut shifted = Binary::zero();
+
+        for i in 0..(64 - rhs)  {
+            shifted.set(i, self.get(i + 1));
+        }
+
+        shifted
+    }
+}
+
+impl Shr<usize> for &Binary {
+    type Output = Binary;
+
+    fn shr(self, rhs: usize) -> Binary {
+        let mut shifted = Binary::zero();
+
+        for i in rhs..64 {
+            shifted.set(i, self.get(i - 1));
+        }
+
+        shifted
+    }
 }
 
 impl<'a, 'b> Add<&'b Binary> for &'a Binary {
@@ -199,8 +238,59 @@ impl<'a, 'b> Mul<&'b Binary> for &'a Binary {
 impl<'a, 'b> Div<&'b Binary> for &'a Binary {
     type Output = Binary;
 
-    fn div(self, _other: &'b Binary) -> Binary {
-        Binary::zero()
+    /// Emulates long division in a comically long fashion
+    fn div(self, other: &'b Binary) -> Binary {
+        // Take "absolute value" of the binaries for simpler math,
+        // storing whether final quotient should be negative
+        let negate = self.is_negative() != other.is_negative();
+
+        let dividend = if self.is_negative() {
+            self.complement()
+        } else {
+            self.copy()
+        };
+
+        let divisor = if other.is_negative() {
+            other.complement()
+        } else {
+            other.copy()
+        };
+
+        let mut quotient = Binary::zero();
+
+        // The partial dividend starts at "zero", with each successive round
+        // shifting the next bit from the original number
+        let mut partial_dividend = Binary::zero();
+
+        for i in 0..64 {
+            // Shift partial left and assign next bit to least significant
+            partial_dividend = &partial_dividend << 1;
+            partial_dividend.set(63, dividend.get(i));
+
+            // Now go bit by bit and check if either is greater and, if so,
+            // breaking the loop and determining what value to assign to quot
+            let mut result = Bit::On;
+
+            for j in 0..64 {
+                if partial_dividend.get(j) != divisor.get(j) {
+                    if divisor.get(j) == Bit::On {
+                        result = Bit::Off;
+                    }
+
+                    break;
+                }
+            }
+
+            quotient.set(i, result);
+
+            // If the result was a "1" then we need to create a new dividend by
+            // subtracting the divisor from the prior dividend
+            if result == Bit::On {
+                partial_dividend = &partial_dividend - &divisor;
+            }
+        }
+
+        if negate { quotient.complement() } else { quotient }
     }
 }
 
@@ -208,6 +298,34 @@ impl<'a, 'b> Div<&'b Binary> for &'a Binary {
 #[cfg(test)]
 mod tests {
     use super::{Bit, Binary};
+
+    #[test]
+    fn test_shl() {
+        let one = Binary::one();
+        let mut two = Binary::zero();
+        two.set(62, Bit::On);
+
+        let shifted = &one << 1;
+
+        assert_ne!(one, two);
+        assert_eq!(shifted, two);
+    }
+
+    #[test]
+    fn test_shr() {
+        let one = Binary::one();
+        let mut two = Binary::zero();
+        two.set(62, Bit::On);
+
+        let shifted = &two >> 1;
+
+        assert_eq!(shifted, one);
+    }
+
+    #[test]
+    fn test_partial_eq() {
+        assert_ne!(Binary::zero(), Binary::one());
+    }
 
     #[test]
     fn from_int_test() {

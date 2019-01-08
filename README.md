@@ -17,5 +17,5 @@ With Rust 1.29.0 and `cargo` installed:
 - [x] Add
 - [x] Subtract
 - [x] Multiply
-- [ ] Divide
+- [x] Divide
 - [ ] Exponentiation?
