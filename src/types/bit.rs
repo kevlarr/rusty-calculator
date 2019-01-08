@@ -34,12 +34,12 @@ impl Bit {
 }
 
 impl fmt::Debug for Bit {
-	fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-		match self {
-			Off => 0.fmt(formatter),
-			On  => 1.fmt(formatter),
-		}
-	}
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Off => 0.fmt(formatter),
+            On  => 1.fmt(formatter),
+        }
+    }
 }
 
 impl PartialOrd for Bit {
@@ -55,44 +55,44 @@ impl PartialOrd for Bit {
 }
 
 impl BitAnd for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn bitand(self, other: Self) -> Self {
-		match (self, other) {
-			(On, On) => On,
-			_ => Off,
-		}
-	}
+    fn bitand(self, other: Self) -> Self {
+        match (self, other) {
+            (On, On) => On,
+            _ => Off,
+        }
+    }
 }
 
 impl BitOr for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn bitor(self, other: Self) -> Self {
-		match (self, other) {
-			(On, _) | (_, On) => On,
-			_ => Off,
-		}
-	}
+    fn bitor(self, other: Self) -> Self {
+        match (self, other) {
+            (On, _) | (_, On) => On,
+            _ => Off,
+        }
+    }
 }
 
 impl BitXor for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn bitxor(self, other: Self) -> Self {
-		if self == other { Off } else { On }
-	}
+    fn bitxor(self, other: Self) -> Self {
+        if self == other { Off } else { On }
+    }
 }
 
 impl Not for Bit {
-	type Output = Self;
+    type Output = Self;
 
-	fn not(self) -> Self {
-		match self {
-			Off => On,
-			On  => Off,
-		}
-	}
+    fn not(self) -> Self {
+        match self {
+            Off => On,
+            On  => Off,
+        }
+    }
 }
 
 
