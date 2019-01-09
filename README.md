@@ -3,7 +3,7 @@
 <sub>Or, *A Pointlessly Complex Calculator Prompt*</sub>
 
 An exercise in learning the basics of Rust as well as exploring the
-"circuitry" underlying binary math using booleans and simulated logic gates.
+"circuitry" underlying binary integer math using booleans and simulated logic gates.
 
 With Rust 1.29.0 and `cargo` installed:
 
@@ -18,4 +18,5 @@ With Rust 1.29.0 and `cargo` installed:
 - [x] Subtract
 - [x] Multiply
 - [x] Divide
-- [ ] Exponentiation?
+- [ ] Multiple operations per expression
+- [ ] Up/down cycle through history

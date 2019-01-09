@@ -2,7 +2,7 @@ extern crate rustycalc;
 
 use std::io;
 use std::io::Write;
-use rustycalc::types::Operation;
+use rustycalc::types::{Expression, Operation};
 
 fn main() {
     println!("--Kevin's Rusty Calculator--");
@@ -13,13 +13,13 @@ fn main() {
         match get_input() {
             ref input if input == "q" => std::process::exit(0),
             ref input if input == "hi" => println!("Hello!"),
-            input => eval(input),
+            input => parse_input(input),
         }
     }
 }
 
 fn get_input() -> String {
-    print!("> ");
+    print!("\n> ");
     std::io::stdout().flush().unwrap();
 
     let mut input = String::new();
@@ -28,7 +28,7 @@ fn get_input() -> String {
     input.trim().to_string()
 }
 
-fn eval(input: String) {
+fn parse_input(input: String) {
     let mut pieces = input.split_whitespace();
 
     // Should be three pieces: left arg, operator, and right arg
