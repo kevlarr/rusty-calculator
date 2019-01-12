@@ -8,17 +8,48 @@ pub enum Expression {
     Node(Box<Expression>, Operation, Box<Expression>),
 }
 
-impl Expression {
-    /// Parses string input into an Expression tree.
-    /// Sub-expressions require parentheses, eg. "(104 + 1) - 15".
-    pub fn from_str(s: &str) -> Expression {
-        use super::super::{add};
 
-        Expression::Node(
-            Box::new(Expression::Val(5)),
-            add,
-            Box::new(Expression::Val(12)),
-        )
+
+impl Expression {
+    /// Parses string input into an Expression tree. Requires parentheses
+    /// to wrap sub-expresions, eg. "5 * ((104 + 1) - 14)".
+    pub fn from_str(s: &str) -> Result<Expression, String> {
+
+        let mut stack = vec![String::new()];
+
+        for c in s.chars() {
+            if c.is_whitespace() {
+                continue;
+            }
+
+            if c == '(' {
+                stack.push(String::new());
+                //ast.indent();
+            } else if c == ')' {
+                let frame = stack.pop();
+                let n = stack.len();
+                stack[n - 1].push_str(Expression::parse(frame));
+            } else {
+                let n = stack.len();
+                stack[n - 1].push(c);
+            }
+        }
+
+
+
+
+        use super::super::{add};
+        use self::Expression::*;
+
+        let lhs = Val(0);
+        let rhs = Val(0);
+        let op = add;
+
+        Ok(Node(Box::new(lhs), op, Box::new(rhs)))
+    }
+
+    /// Parses a single-level expression from a str, eg. "12 + 2"
+    fn parse(s: &str) -> Result<Expression, String> {
     }
 
     /// Evaluates self expression, which in turn will evaluate all
@@ -77,15 +108,16 @@ mod tests {
         };
 
         let str1 = "5 + 12";
-        let str2 = "(15-3)*12";
+        let str2 = "( 15 - 3 ) * 12";
+        let str3 = "(15-3)+(2+3)";
 
         assert_eq!(
             Expression::from_str(str1),
-            Node(Box::new(Val(5)), add, Box::new(Val(12))),
+            Ok(Node(Box::new(Val(5)), add, Box::new(Val(12)))),
         );
         assert_eq!(
             Expression::from_str(str2),
-            Node(
+            Ok(Node(
                 Box::new(Node(
                     Box::new(Val(15)),
                     subtract,
@@ -94,7 +126,23 @@ mod tests {
                 multiply,
                 Box::new(Val(12)),
             )
-        );
+        ));
+        assert_eq!(
+            Expression::from_str(str3),
+            Ok(Node(
+                Box::new(Node(
+                    Box::new(Val(15)),
+                    subtract,
+                    Box::new(Val(3)),
+                )),
+                add,
+                Box::new(Node(
+                    Box::new(Val(2)),
+                    add,
+                    Box::new(Val(3)),
+                )),
+            )
+        ));
     }
 
     #[test]
