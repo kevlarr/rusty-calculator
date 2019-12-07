@@ -2,23 +2,39 @@ extern crate rustycalc;
 
 use std::io;
 use std::io::Write;
-use rustycalc::types::{Expression, Operation};
+use rustycalc::types::Operation;
 
 fn main() {
+    let args: Vec<_> = std::env::args().collect();
+
+    if args.len() < 2 {
+        println!("Usage:
+    calc -i                # Open interactive prompt
+    calc '<expression>'    # Calculate and print result of provided expression");
+        return;
+    }
+
+    match args[1].as_ref() {
+        "-i" => interact(),
+        _ => evaluate(&args[1..].join(" ")),
+    }
+}
+
+fn interact() {
     println!("--Kevin's Rusty Calculator--");
     println!("  Enter expression (eg. 124 + 12) or q to quit");
     println!("  Numbers can span from {} to {}", std::i64::MIN, std::i64::MAX);
 
     loop {
-        match get_input() {
-            ref input if input == "q" => std::process::exit(0),
-            ref input if input == "hi" => println!("Hello!"),
-            input => parse_input(input),
+        match prompt().as_ref() {
+            "q" => std::process::exit(0),
+            "hi" => println!("Hello!"),
+            input => evaluate(input),
         }
     }
 }
 
-fn get_input() -> String {
+fn prompt() -> String {
     print!("\n> ");
     std::io::stdout().flush().unwrap();
 
@@ -28,28 +44,34 @@ fn get_input() -> String {
     input.trim().to_string()
 }
 
-fn parse_input(input: String) {
+fn evaluate(input: &str) {
     let mut pieces = input.split_whitespace();
+    let mut piece;
 
     // Should be three pieces: left arg, operator, and right arg
-    let left_hand = match parse_integer(pieces.next()) {
+    piece = pieces.next();
+    let left_hand = match parse_integer(piece) {
         Some(x) => x,
         None => {
-            println!("Error: Must supply valid left-hand argument");
+            eprintln!("Error: Must supply valid left-hand argument");
             return;
         },
     };
-    let operator = match parse_operator(pieces.next()) {
+
+    piece = pieces.next();
+    let operator = match parse_operator(piece) {
         Some(op) => op,
         None => {
-            println!("Error: Must supply valid operator");
+            eprintln!("Error: '{:?}' not a valid operator", piece);
             return;
         },
     };
-    let right_hand = match parse_integer(pieces.next()) {
+
+    piece = pieces.next();
+    let right_hand = match parse_integer(piece) {
         Some(x) => x,
         None => {
-            println!("Error: Must supply valid right-hand argument");
+            eprintln!("Error: Must supply valid right-hand argument");
             return;
         },
     };
