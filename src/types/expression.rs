@@ -63,6 +63,7 @@ impl fmt::Debug for Expression {
     }
 }
 
+/*
 #[cfg(test)]
 mod tests {
     #[test]
@@ -121,3 +122,4 @@ mod tests {
         assert_eq!(exp.eval(), Ok(15));
     }
 }
+*/

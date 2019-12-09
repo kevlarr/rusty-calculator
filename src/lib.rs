@@ -1,3 +1,4 @@
+pub mod lexer;
 pub mod types;
 
 use types::{Binary, ParseResult};

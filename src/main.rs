@@ -3,6 +3,7 @@ extern crate rustycalc;
 use std::io;
 use std::io::Write;
 use rustycalc::types::Operation;
+use rustycalc::lexer;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -45,6 +46,8 @@ fn prompt() -> String {
 }
 
 fn evaluate(input: &str) {
+    lexer::lex(input).unwrap();
+
     let mut pieces = input.split_whitespace();
     let mut piece;
 
