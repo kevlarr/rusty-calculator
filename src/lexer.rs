@@ -50,35 +50,23 @@ impl TokenSequence {
     }
 }
 
-//impl fmt::Debug for TokenSequence {
-    //fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        //write!(f, "{}", self.0.map(|&t| format!("{:?}", t)).join(", "))
-    //}
-//}
+/// Represents a character that cannot be tokenized.
+#[derive(Debug, PartialEq)]
+pub struct InvalidCharacter(pub char);
 
-
-/// TODO more descriptive error type
-#[derive(Debug)]
-pub struct LexerError {}
-
-impl fmt::Display for LexerError {
+impl fmt::Display for InvalidCharacter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "There was an error lexing the input")
+        write!(f, "Invalid character: '{}'", self.0)
     }
 }
 
-impl error::Error for LexerError {}
+impl error::Error for InvalidCharacter {}
 
 
 /// Receives input text and attempts to generate a valid token stream.
-pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
+pub fn lex(s: &str) -> Result<TokenSequence, InvalidCharacter> {
     use self::Symbol::*;
 
-    let charmap = {
-        let mut map = HashMap::new();
-        map.insert('+', Plus);
-        map
-    };
     let charmap: HashMap<char, Symbol> = vec![
         ('*', Asterisk),
         ('^', Caret),
@@ -119,10 +107,12 @@ pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
             tokens.add(
                 Token::Num(num.parse::<i64>().unwrap())
             );
+            continue;
         }
+
+        return Err(InvalidCharacter(c));
     }
 
-    //Err(LexerError {})
     Ok(tokens)
 }
 
@@ -191,5 +181,17 @@ mod tests {
             Sym(Period),
             Sym(Plus),
         ]);
+    }
+
+    #[test]
+    fn test_lex_error() {
+        let e = lex("x").err().unwrap();
+
+        assert_eq!(e, InvalidCharacter('x'));
+        assert_eq!(e.to_string(), String::from("Invalid character: 'x'"));
+
+        let e = lex("5asdf").err().unwrap();
+
+        assert_eq!(e, InvalidCharacter('a'));
     }
 }
