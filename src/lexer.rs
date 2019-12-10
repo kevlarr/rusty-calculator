@@ -1,25 +1,32 @@
 use {
-    std::{error, fmt},
+    std::{
+        collections::HashMap,
+        error,
+        fmt},
 };
 
 
 /// The set of available mathematical operations.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Operation {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
+pub enum Symbol {
+    Asterisk,
+    Caret,
+    Comma,
+    ForwardSlash,
+    Minus,
+    ParenClose,
+    ParenOpen,
+    Percent,
+    Period,
+    Plus,
 }
 
 
 /// The set of possible tokens.
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Token {
-    Op(Operation),
+    Sym(Symbol),
     Num(i64),
-    OpenParens,
-    CloseParens,
 }
 
 
@@ -65,6 +72,26 @@ impl error::Error for LexerError {}
 
 /// Receives input text and attempts to generate a valid token stream.
 pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
+    use self::Symbol::*;
+
+    let charmap = {
+        let mut map = HashMap::new();
+        map.insert('+', Plus);
+        map
+    };
+    let charmap: HashMap<char, Symbol> = vec![
+        ('*', Asterisk),
+        ('^', Caret),
+        (',', Comma),
+        ('/', ForwardSlash),
+        ('-', Minus),
+        (')', ParenClose),
+        ('(', ParenOpen),
+        ('%', Percent),
+        ('.', Period),
+        ('+', Plus),
+    ].into_iter().collect();
+
     let mut tokens = TokenSequence::new();
     let mut chars = s.chars().peekable();
 
@@ -77,6 +104,11 @@ pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
 
         if c.is_whitespace() { continue; }
 
+        if let Some(symbol) = charmap.get(&c) {
+            tokens.add(Token::Sym(symbol.clone()));
+            continue;
+        }
+
         if c.is_digit(10) {
             let mut num = c.to_string();
             while let Some(&c2) = chars.peek() {
@@ -88,11 +120,7 @@ pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
                 Token::Num(num.parse::<i64>().unwrap())
             );
         }
-
-        println!("{:?}", c);
     }
-
-    println!("{:?}", tokens);
 
     //Err(LexerError {})
     Ok(tokens)
@@ -103,15 +131,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_lex() {
+    fn test_lex_success() {
         use super::Token::*;
+        use super::Symbol::*;
 
         let assert = |s: &str, v: Vec<Token>| assert_eq!(
             lex(s).unwrap(),
             TokenSequence(v),
         );
 
-        assert("123 432", vec![
+        assert("", vec![]);
+        assert("     \t\n    ", vec![]);
+
+        assert("123\t432      ", vec![
             Num(123),
             Num(432),
         ]);
@@ -120,6 +152,44 @@ mod tests {
             Num(1234567),
             Num(7890),
             Num(5432),
+        ]);
+
+        assert("0 -0", vec![
+            Num(0),
+            Sym(Minus),
+            Num(0),
+        ]);
+
+        assert("5 + 4", vec![
+            Num(5),
+            Sym(Plus),
+            Num(4),
+        ]);
+
+        assert("5 + 4*(-2/      0)", vec![
+            Num(5),
+            Sym(Plus),
+            Num(4),
+            Sym(Asterisk),
+            Sym(ParenOpen),
+            Sym(Minus),
+            Num(2),
+            Sym(ForwardSlash),
+            Num(0),
+            Sym(ParenClose),
+        ]);
+
+        assert("*^\n,/-)(%.+", vec![
+            Sym(Asterisk),
+            Sym(Caret),
+            Sym(Comma),
+            Sym(ForwardSlash),
+            Sym(Minus),
+            Sym(ParenClose),
+            Sym(ParenOpen),
+            Sym(Percent),
+            Sym(Period),
+            Sym(Plus),
         ]);
     }
 }
