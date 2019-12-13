@@ -6,18 +6,16 @@ use {
 };
 
 
-/// The set of available mathematical operations.
+/// The white-listed set of non-digit symbols.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Symbol {
     Asterisk,
     Caret,
-    Comma,
     ForwardSlash,
     Minus,
     ParenClose,
     ParenOpen,
     Percent,
-    Period,
     Plus,
 }
 
@@ -50,46 +48,46 @@ impl TokenSequence {
     }
 }
 
-/// Represents a character that cannot be tokenized.
+/// The set of possible lexer errors.
 #[derive(Debug, PartialEq)]
-pub struct InvalidCharacter(pub char);
-
-impl fmt::Display for InvalidCharacter {
+pub enum LexerError {
+    InvalidCharacter(char),
+    UnexpectedCharacter { position: usize, chr: char },
+}
+impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Invalid character: '{}'", self.0)
+        use self::LexerError::*;
+
+        match self {
+            InvalidCharacter(c) => write!(f, "Invalid character: '{}'", c),
+            UnexpectedCharacter { position, chr} => write!(
+                f, "Unexpected character at {}: '{}'", position, chr
+            ),
+        }
     }
 }
 
-impl error::Error for InvalidCharacter {}
-
+impl error::Error for LexerError {}
 
 /// Receives input text and attempts to generate a valid token stream.
-pub fn lex(s: &str) -> Result<TokenSequence, InvalidCharacter> {
+pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
     use self::Symbol::*;
 
     let charmap: HashMap<char, Symbol> = vec![
         ('*', Asterisk),
         ('^', Caret),
-        (',', Comma),
         ('/', ForwardSlash),
         ('-', Minus),
         (')', ParenClose),
         ('(', ParenOpen),
         ('%', Percent),
-        ('.', Period),
         ('+', Plus),
     ].into_iter().collect();
 
     let mut tokens = TokenSequence::new();
-    let mut chars = s.chars().peekable();
+    let mut chars = s.chars().enumerate().peekable();
 
-    // Each loop through can advance the iterator an arbitrary number of times
-    while let Some(_) = chars.peek() {
-        let c = match chars.next() {
-            Some(chr) => chr,
-            None => unreachable!(),
-        };
-
+    while let Some((_i1, c)) = chars.next() {
         if c.is_whitespace() { continue; }
 
         if let Some(symbol) = charmap.get(&c) {
@@ -99,10 +97,26 @@ pub fn lex(s: &str) -> Result<TokenSequence, InvalidCharacter> {
 
         if c.is_digit(10) {
             let mut num = c.to_string();
-            while let Some(&c2) = chars.peek() {
+            let mut comma_last = false;
+
+            while let Some(&(i2, c2)) = chars.peek() {
+                if c2 == ',' {
+                    if comma_last {
+                        return Err(LexerError::UnexpectedCharacter {
+                            position: i2 + 1,
+                            chr: c2,
+                        });
+                    }
+
+                    chars.next();
+                    comma_last = true;
+                    continue;
+                }
+
                 if !c2.is_digit(10) { break; }
 
-                num.push(chars.next().unwrap());
+                num.push(chars.next().unwrap().1);
+                comma_last = false;
             }
             tokens.add(
                 Token::Num(num.parse::<i64>().unwrap())
@@ -110,7 +124,7 @@ pub fn lex(s: &str) -> Result<TokenSequence, InvalidCharacter> {
             continue;
         }
 
-        return Err(InvalidCharacter(c));
+        return Err(LexerError::InvalidCharacter(c));
     }
 
     Ok(tokens)
@@ -169,22 +183,29 @@ mod tests {
             Sym(ParenClose),
         ]);
 
-        assert("*^\n,/-)(%.+", vec![
+        assert("5 + -12,192,293", vec![
+            Num(5),
+            Sym(Plus),
+            Sym(Minus),
+            Num(12_192_293),
+        ]);
+
+        assert("*^\n/-)(%+", vec![
             Sym(Asterisk),
             Sym(Caret),
-            Sym(Comma),
             Sym(ForwardSlash),
             Sym(Minus),
             Sym(ParenClose),
             Sym(ParenOpen),
             Sym(Percent),
-            Sym(Period),
             Sym(Plus),
         ]);
     }
 
     #[test]
     fn test_lex_error() {
+        use self::LexerError::*;
+
         let e = lex("x").err().unwrap();
 
         assert_eq!(e, InvalidCharacter('x'));
@@ -193,5 +214,12 @@ mod tests {
         let e = lex("5asdf").err().unwrap();
 
         assert_eq!(e, InvalidCharacter('a'));
+
+        let e = lex("5 + -12,192,,293").err().unwrap();
+
+        assert_eq!(e, UnexpectedCharacter {
+            position: 13,
+            chr: ',',
+        });
     }
 }
