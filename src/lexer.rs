@@ -2,7 +2,9 @@ use {
     std::{
         collections::HashMap,
         error,
-        fmt},
+        fmt,
+        slice,
+    },
 };
 
 
@@ -22,19 +24,23 @@ pub enum Symbol {
 
 /// The set of possible tokens.
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum Token {
-    Sym(Symbol),
+pub enum Token {
     Num(i64),
+    Sym(Symbol),
 }
 
 
-/// A sequence of tokens.
+/// A sequence of tokens, surprise surprise.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenSequence(Vec<Token>);
 
 impl TokenSequence {
-    fn new() -> Self {
+    pub fn new() -> Self {
         TokenSequence(Vec::new())
+    }
+
+    pub fn with_tokens(tokens: Vec<Token>) -> Self {
+        TokenSequence(tokens)
     }
 
     fn last(&self) -> Option<&Token> {
@@ -45,6 +51,14 @@ impl TokenSequence {
 
     fn add(&mut self, t: Token) {
         self.0.push(t);
+    }
+
+    pub fn iter(&self) -> slice::Iter<Token> {
+        self.0.iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 }
 
