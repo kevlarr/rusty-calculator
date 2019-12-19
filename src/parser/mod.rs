@@ -2,7 +2,6 @@ pub mod syntax;
 mod machine;
 
 use {
-    self::syntax::Node,
     super::{
         lexer::{
             Symbol,
@@ -10,7 +9,11 @@ use {
             TokenSequence,
         },
         parser::{
-            syntax::Operation,
+            syntax::{
+                AST,
+                BinaryOp,
+                Syntax,
+            },
         },
     },
 };
@@ -18,9 +21,9 @@ use {
 
 
 /// Attempts to parse a sequence of tokens into an AST
-pub fn parse(seq: &TokenSequence) -> Result<Node, ()> {
+pub fn parse(seq: &TokenSequence) -> Result<AST, ()> {
     if seq.len() == 0 {
-        return Ok(Node::NoOp);
+        return Ok(AST::new());
     }
 
     let mut seq = seq.iter().peekable();
@@ -28,7 +31,7 @@ pub fn parse(seq: &TokenSequence) -> Result<Node, ()> {
     //while let Some(&t) = seq.peek() {
     //}
 
-    Ok(Node::Val(0))
+    Ok(AST::new())
 }
 
 #[cfg(test)]
@@ -41,7 +44,11 @@ mod tests {
                 TokenSequence,
             },
             parser::{
-                syntax::Operation,
+                syntax::{
+                    AST,
+                    BinaryOp,
+                    Syntax,
+                },
             },
         },
     };
@@ -49,32 +56,33 @@ mod tests {
     #[test]
     fn parse_success() {
         use super::{
-            Node::*,
-            Operation::*,
+            AST,
+            BinaryOp::*,
             Symbol::*,
             TokenSequence,
             Token::*,
+            Syntax::*,
             parse,
         };
 
         assert_eq!(
             parse(&TokenSequence::new()),
-            Ok(NoOp),
+            Ok(AST::new()),
         );
 
-        let assert = |tokens, nodes| assert_eq!(
+        let assert = |tokens, syntax| assert_eq!(
             parse(&TokenSequence::with_tokens(tokens)),
-            Ok(nodes),
+            Ok(AST::with_syntax(syntax)),
         );
 
         assert(vec![
             Num(15),
             Sym(Plus),
             Num(20),
-        ], Expr(
-            Box::new(Val(15)),
+        ], Expression(
+            Box::new(Literal(15)),
             Add,
-            Box::new(Val(20)),
+            Box::new(Literal(20)),
         ));
 
         assert(vec![
@@ -86,14 +94,14 @@ mod tests {
             Sym(ParenClose),
             Sym(Asterisk),
             Num(5),
-        ], Expr(
-            Box::new(Expr(
-                Box::new(Val(1)),
+        ], Expression(
+            Box::new(Expression(
+                Box::new(Literal(1)),
                 Add,
-                Box::new(Val(3)),
+                Box::new(Literal(3)),
             )),
             Mul,
-            Box::new(Val(5)),
+            Box::new(Literal(5)),
         ));
 
         assert(vec![
@@ -109,19 +117,19 @@ mod tests {
             Sym(Minus),
             Num(2),
             Sym(ParenClose),
-        ], Expr(
-            Box::new(Val(1)),
+        ], Expression(
+            Box::new(Literal(1)),
             Add,
-            Box::new(Expr(
-                Box::new(Val(5)),
+            Box::new(Expression(
+                Box::new(Literal(5)),
                 Mul,
-                Box::new(Expr(
-                    Box::new(Val(2)),
+                Box::new(Expression(
+                    Box::new(Literal(2)),
                     Exp,
-                    Box::new(Expr(
-                        Box::new(Val(4)),
+                    Box::new(Expression(
+                        Box::new(Literal(4)),
                         Sub,
-                        Box::new(Val(2)),
+                        Box::new(Literal(2)),
                     ))
                 )),
             )),

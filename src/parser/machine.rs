@@ -7,8 +7,9 @@ use {
         },
         parser::{
             syntax::{
-                Node,
-                Operation,
+                AST,
+                BinaryOp,
+                Syntax,
             },
         },
     },
@@ -19,21 +20,54 @@ use {
     },
 };
 
+// State: 01
+// Rules:
+//     Num            -> 02 (Literal)
+//     Sym(ParenOpen) -> 04 (ExprStart)
+//     Sym(Minus)     -> 03 (Negation)
+
+// State: 02 **
+// Rules:
+//     Op              -> 04 (Operation)
+
+// State: 03
+// Rules:
+//     Num       -> 02 (Literal)
+//     ParenOpen -> 04 (ExprStart)
+
+
+// State: 04
+//     This state is similar to 01, except that the
+//     rules expect stack values to be present.
+// Rules:
+//     Num            -> 02 (Literal)
+//     Sym(ParenOpen) -> 04 (ExprStart)
+//     Sym(Minus)     -> 03 (Negation)
+//     Sym(ParenClose) -> 02 (ExprEnd)
+
+
 struct Stack;
 
-struct Syntax;
+impl Stack {
+    fn new() -> Self {
+        Stack
+    }
+}
+
+
+
 
 #[derive(Debug, PartialEq)]
-pub enum StateError {
+pub enum StepError {
     UnexpectedToken,
     IncompleteSequence,
 }
 
-impl error::Error for StateError {}
+impl error::Error for StepError {}
 
-impl fmt::Display for StateError {
+impl fmt::Display for StepError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use self::StateError::*;
+        use self::StepError::*;
 
         match self {
             UnexpectedToken => write!(f, "A token was unexpected"),
@@ -42,28 +76,28 @@ impl fmt::Display for StateError {
     }
 }
 
-trait State {
+trait Step {
     fn receive(&mut self,
                stack: &mut Stack,
-               syntax: &mut Syntax,
+               tree: &mut AST,
                t: Token,
-    ) -> Result<Box<dyn State>, StateError>;
+    ) -> Result<Box<dyn Step>, StepError>;
 
     fn finishable(&self) -> bool;
 }
 
 struct ExprBegin;
 
-impl State for ExprBegin {
+impl Step for ExprBegin {
     fn finishable(&self) -> bool {
         false
     }
 
     fn receive(&mut self,
                stack: &mut Stack,
-               syntax: &mut Syntax,
+               tree: &mut AST,
                t: Token,
-    ) -> Result<Box<dyn State>, StateError> {
+    ) -> Result<Box<dyn Step>, StepError> {
         //match t {
             //Token::Num(_) => true,
             //Token::Sym(Symbol::ParenOpen) => true,
@@ -75,30 +109,30 @@ impl State for ExprBegin {
 }
 
 struct Machine {
-    state: Box<dyn State>,
     stack: Stack,
-    syntax: Syntax,
+    step: Box<dyn Step>,
+    tree: AST,
 }
 
 impl Machine {
-    fn new(state: Box<dyn State>) -> Self {
+    fn begin_with(step: Box<dyn Step>) -> Self {
         Self {
-            stack: Stack,
-            syntax: Syntax,
-            state,
+            stack: Stack::new(),
+            tree: AST::new(),
+            step,
         }
     }
 
-    fn to_syntax(mut self, tokens: &TokenSequence) -> Result<Syntax, StateError> {
+    fn to_ast(mut self, tokens: &TokenSequence) -> Result<AST, StepError> {
         for t in tokens.iter() {
-            self.state = self.state.receive(&mut self.stack, &mut self.syntax, *t)?;
+            self.step = self.step.receive(&mut self.stack, &mut self.tree, *t)?;
         }
 
-        if self.state.finishable() {
-            return Ok(self.syntax);
+        if self.step.finishable() {
+            return Ok(self.tree);
         }
 
-        Err(StateError::IncompleteSequence)
+        Err(StepError::IncompleteSequence)
     }
 }
 
@@ -108,14 +142,14 @@ mod tests {
     use super::*;
 
     #[derive(Clone)]
-    struct TestState1;
+    struct TestStep1;
 
-    impl State for TestState1 {
+    impl Step for TestStep1 {
         fn receive(&mut self,
                    _stack: &mut Stack,
-                   _syntax: &mut Syntax,
+                   _tree: &mut AST,
                    _t: Token,
-        ) -> Result<Box<dyn State>, StateError> {
+        ) -> Result<Box<dyn Step>, StepError> {
             Ok(Box::new(self.clone()))
         }
 
@@ -123,14 +157,14 @@ mod tests {
     }
 
     #[derive(Clone)]
-    struct TestState2;
+    struct TestStep2;
 
-    impl State for TestState2 {
+    impl Step for TestStep2 {
         fn receive(&mut self,
                    _stack: &mut Stack,
-                   _syntax: &mut Syntax,
+                   _tree: &mut AST,
                    _t: Token,
-        ) -> Result<Box<dyn State>, StateError> {
+        ) -> Result<Box<dyn Step>, StepError> {
             Ok(Box::new(self.clone()))
         }
 
@@ -144,189 +178,15 @@ mod tests {
             Token::Num(13),
         ]);
 
-        Machine::new(Box::new(TestState1))
-            .to_syntax(&seq)
-            .expect("Result should be a syntax");
+        Machine::begin_with(Box::new(TestStep1))
+            .to_ast(&seq)
+            .expect("Result should be an AST");
 
         assert_eq!(
-            Machine::new(Box::new(TestState2))
-                .to_syntax(&seq)
+            Machine::begin_with(Box::new(TestStep2))
+                .to_ast(&seq)
                 .err(),
-            Some(StateError::IncompleteSequence)
+            Some(StepError::IncompleteSequence)
         );
     }
 }
-
-
-
-
-
-
-
-/*
-use std::cell::RefCell;
-
-#[derive(Debug)]
-struct Rule<'a> {
-    next_state: &'a State<'a>,
-}
-
-#[derive(Debug)]
-struct State<'a> {
-    rules: RefCell<Vec<Rule<'a>>>,
-}
-
-impl<'a> State<'a> {
-    fn new() -> Self {
-        State {
-            rules: RefCell::new(Vec::new()),
-        }
-    }
-
-    fn add_rule(&'a self, r: Rule<'a>) {
-        self.rules.borrow_mut().push(r);
-    }
-}
-
-#[derive(Debug)]
-struct Machine<'a> {
-    states: Vec<&'a State<'a>>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{Machine, Rule, State};
-
-    #[test]
-    fn testy() {
-        let state1 = State::new();
-        let state2 = State::new();
-
-        state1.add_rule(Rule {
-            next_state: &state2,
-        });
-        state2.add_rule(Rule {
-            next_state: &state1,
-        });
-
-        let machine = Machine {
-            states: vec![&state1, &state2],
-        };
-    }
-}
-
-*/
-
-
-
-
-
-/*
-struct Rule {
-    accepts: Token,
-}
-
-struct State {
-    rules: Vec<Rule>,
-}
-
-fn wat() {
-    let expr_start = State {
-        rules: vec![
-            Rule { accepts: Token
-        ],
-    };
-    let 
-}
-*/
-
-/*
-enum StackItem {
-    Value(i64),
-    //Negation,
-    Op(Operation),
-}
-
-/// A simple stack of items to enable the machine to
-/// determine precedences and create nested expressions.
-/// The top of the stack is to the right.
-struct Stack(Vec<StackItem>);
-
-impl Stack {
-    fn new() -> Self {
-        Stack(Vec::new())
-    }
-}
-
-struct Rule<T> {
-    state: usize,
-    next_state: usize,
-    //accepts: Token,
-    //pop_items: Vec<StackItem>,
-    //push_items: Vec<StackItem>,
-}
-
-impl<T> Rule<T> {
-}
-
-struct Rulebook(Vec<Rule>);
-
-impl Rulebook {
-}
-
-
-pub struct Machine {
-    finish_states: HashSet<usize>,
-    rules: Rulebook,
-    stack: Stack,
-    state: usize,
-}
-
-impl Machine {
-    pub fn new() -> Self {
-        Machine {
-            finish_states: {
-                let mut hs = HashSet::new();
-                hs.insert(2);
-                hs
-            },
-            rules: Rulebook(vec![
-                // State: 01
-                // Rules:
-                //     Num            -> 02 (Literal)
-                //     Sym(ParenOpen) -> 04 (ExprStart)
-                //     Sym(Minus)     -> 03 (Negation)
-                Rule {
-                    state: 1,
-                    next_state: 2,
-                    accepts: Token::Num, // FIXME
-                },
-
-                // State: 02 **
-                // Stack: ??
-                // Rules:
-                //     Op              -> 04 (Operation)
-
-                // State: 03
-                // Stack: ??
-                // Rules:
-                //     Num       -> 02 (Literal)
-                //     ParenOpen -> 04 (ExprStart)
-
-
-                // State: 04
-                //     This state is similar to 01, except that the
-                //     rules expect stack values to be present.
-                // Stack: ??
-                // Rules:
-                //     Num            -> 02 (Literal)
-                //     Sym(ParenOpen) -> 04 (ExprStart)
-                //     Sym(Minus)     -> 03 (Negation)
-                //     Sym(ParenClose) -> 02 (ExprEnd)
-            ]),
-            stack: Stack::new(),
-            state: 1,
-        }
-    }
-}
-*/
