@@ -9,6 +9,12 @@ pub enum BinaryOp {
     Mod,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Fragment {
+    Literal(i64),
+    Op(BinaryOp),
+}
+
 /// The possible syntax tree elements.
 ///
 /// While a single literal value (eg. "5") is valid syntax, more
@@ -21,22 +27,26 @@ pub enum BinaryOp {
 /// of either a single literal value or a binary operation whose operands
 /// are potentially nested expressions.
 #[derive(Debug, PartialEq)]
-pub enum Syntax {
+pub enum Node {
     Empty,
-    Expression(Box<Syntax>, BinaryOp, Box<Syntax>),
+    Expression(Box<Node>, BinaryOp, Box<Node>),
     Literal(i64),
 }
 
 /// Blergh.
 #[derive(Debug, PartialEq)]
-pub struct AST(Syntax);
+pub struct AST(Node);
 
 impl AST {
     pub fn new() -> Self {
-        AST(Syntax::Empty)
+        AST(Node::Empty)
     }
 
-    pub fn with_syntax(s: Syntax) -> Self {
-        AST(s)
+    pub fn with_syntax(n: Node) -> Self {
+        AST(n)
+    }
+
+    pub fn top(&self) -> &Node {
+        &self.0
     }
 }

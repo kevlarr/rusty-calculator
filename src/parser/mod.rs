@@ -13,7 +13,7 @@ use {
             syntax::{
                 AST,
                 BinaryOp,
-                Syntax,
+                Node,
             },
         },
     },
@@ -48,7 +48,7 @@ mod tests {
                 syntax::{
                     AST,
                     BinaryOp,
-                    Syntax,
+                    Node,
                 },
             },
         },
@@ -62,7 +62,7 @@ mod tests {
             Symbol::*,
             TokenSequence,
             Token::*,
-            Syntax::*,
+            Node::*,
             parse,
         };
 

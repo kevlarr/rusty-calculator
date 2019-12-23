@@ -2,8 +2,9 @@ use std::{error, fmt};
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-    UnexpectedToken,
     IncompleteSequence,
+    StateNotFinishable,
+    UnexpectedToken,
 }
 
 impl error::Error for ParseError {}
@@ -13,8 +14,9 @@ impl fmt::Display for ParseError {
         use self::ParseError::*;
 
         match self {
-            UnexpectedToken => write!(f, "A token was unexpected"),
             IncompleteSequence => write!(f, "Another token was expected"),
+            StateNotFinishable => write!(f, "Current state is not a finish state."),
+            UnexpectedToken => write!(f, "A token was unexpected"),
         }
     }
 }

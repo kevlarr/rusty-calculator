@@ -6,7 +6,7 @@ use {
         lexer::{Symbol, Token, TokenSequence},
         parser::{
             error::ParseError,
-            syntax::{AST, BinaryOp, Syntax},
+            syntax::{AST, BinaryOp, Node},
         },
     },
     self::{
@@ -15,35 +15,6 @@ use {
     },
     std::collections::HashSet,
 };
-
-
-// State: 01
-// Rules:
-//     Num            -> 02 (Literal)
-//     Sym(ParenOpen) -> 04 (ExprStart)
-//     Sym(Minus)     -> 03 (Negation)
-
-// State: 02 **
-// Rules:
-//     Op              -> 04 (Operation)
-
-// State: 03
-// Rules:
-//     Num       -> 02 (Literal)
-//     ParenOpen -> 04 (ExprStart)
-
-
-// State: 04
-//     This state is similar to 01, except that the
-//     rules expect stack values to be present.
-// Rules:
-//     Num            -> 02 (Literal)
-//     Sym(ParenOpen) -> 04 (ExprStart)
-//     Sym(Minus)     -> 03 (Negation)
-//     Sym(ParenClose) -> 02 (ExprEnd)
-
-
-
 
 struct Machine {
     stack: Stack,
@@ -82,7 +53,7 @@ mod tests {
     struct TestState1;
 
     impl State for TestState1 {
-        fn receive(&mut self,
+        fn receive(&self,
                    _stack: &mut Stack,
                    _tree: &mut AST,
                    _t: Token,
@@ -97,7 +68,7 @@ mod tests {
     struct TestState2;
 
     impl State for TestState2 {
-        fn receive(&mut self,
+        fn receive(&self,
                    _stack: &mut Stack,
                    _tree: &mut AST,
                    _t: Token,
