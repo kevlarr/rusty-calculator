@@ -3,17 +3,17 @@ use {
         lexer::{Symbol, Token},
         parser::{
             error::ParseError,
-            syntax::{AST, BinaryOp, Fragment},
+            syntax::{AST, BinaryOp, Node},
         },
     },
     super::{
         stack::Stack,
     },
-    std::result,
+    std::result::Result as StdResult,
 };
 
 
-type Result = result::Result<Box<dyn State>, ParseError>;
+type Result = StdResult<Box<dyn State>, ParseError>;
 
 
 // State: 01
@@ -33,9 +33,9 @@ type Result = result::Result<Box<dyn State>, ParseError>;
 //     ParenOpen -> 01
 
 pub trait State {
-    fn receive(&self,
-               stack: &mut Stack,
-               tree: &mut AST,
+    fn rule_for(&self,
+               stk: &mut Stack,
+               tr: &mut AST,
                t: Token,
     ) -> Result;
 
@@ -43,10 +43,7 @@ pub trait State {
         false
     }
 
-    fn finish(&self,
-              stack: &mut Stack,
-              tree: &mut AST,
-    ) -> result::Result<AST, ParseError> {
+    fn finish(&self, _stk: &mut Stack, _tr: &mut AST) -> StdResult<(), ParseError> {
         Err(ParseError::StateNotFinishable)
     }
 }
@@ -59,30 +56,26 @@ pub trait State {
 pub struct State01;
 
 impl State01 {
-    fn literal(&self, stack: &mut Stack, n: i64) -> Result {
-        stack.push(Fragment::Literal(n));
+    fn literal(&self, stk: &mut Stack, n: i64) -> Result {
+        stk.push(Node::Literal(n));
         Ok(Box::new(State02))
     }
 
-    fn paren_open(&self, stack: &mut Stack, tree: &mut AST) -> Result {
+    fn paren_open(&self, stk: &mut Stack, tr: &mut AST) -> Result {
         unimplemented!();
     }
 
-    fn negation(&self, stack: &mut Stack) -> Result {
+    fn negation(&self, stk: &mut Stack) -> Result {
         unimplemented!();
     }
 }
 
 impl State for State01 {
-    fn receive(&self,
-               stack: &mut Stack,
-               tree: &mut AST,
-               t: Token,
-    ) -> Result {
+    fn rule_for(&self, stk: &mut Stack, tr: &mut AST, t: Token) -> Result {
         match t {
-            Token::Num(n) => self.literal(stack, n),
-            Token::Sym(Symbol::ParenOpen) => self.paren_open(stack, tree),
-            Token::Sym(Symbol::Minus) => self.negation(stack),
+            Token::Num(n) => self.literal(stk, n),
+            Token::Sym(Symbol::ParenOpen) => self.paren_open(stk, tr),
+            Token::Sym(Symbol::Minus) => self.negation(stk),
 
             _ => return Err(ParseError::UnexpectedToken),
         }
@@ -99,7 +92,7 @@ impl State for State01 {
 pub struct State02;
 
 impl State02 {
-    fn operation(&self, stack: &mut Stack, s: Symbol) -> Result {
+    fn operation(&self, stk: &mut Stack, s: Symbol) -> Result {
         type B = BinaryOp;
         type S = Symbol;
 
@@ -114,7 +107,14 @@ impl State02 {
             _ => return Err(ParseError::UnexpectedToken),
         };
 
-        stack.push(Fragment::Op(op));
+        // The exact operands cannot be known yet
+        stk.push(
+            Node::Expression(
+                Box::new(Node::Empty),
+                op,
+                Box::new(Node::Empty)
+            )
+        );
 
         Ok(Box::new(State01))
     }
@@ -123,17 +123,14 @@ impl State02 {
 impl State for State02 {
     fn finishable(&self) -> bool { true }
 
-    //fn finish(&self)
+    fn finish(&self, _stk: &mut Stack, _tr: &mut AST) -> StdResult<(), ParseError> {
+        unimplemented!();
+    }
 
-    fn receive(&self,
-               stack: &mut Stack,
-               _tree: &mut AST,
-               t: Token,
-    ) -> Result {
+    fn rule_for(&self, stk: &mut Stack, _tr: &mut AST, t: Token) -> Result {
         match t {
-            Token::Sym(s) => self.operation(stack, s),
-
-            _ => return Err(ParseError::UnexpectedToken),
+            Token::Sym(s) => self.operation(stk, s),
+            _ => return Err(ParseError::UnexpectedToken)
         }
     }
 }

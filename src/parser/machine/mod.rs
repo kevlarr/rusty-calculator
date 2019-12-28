@@ -33,7 +33,11 @@ impl Machine {
 
     fn to_ast(mut self, tokens: &TokenSequence) -> Result<AST, ParseError> {
         for t in tokens.iter() {
-            self.state = self.state.receive(&mut self.stack, &mut self.tree, *t)?;
+            self.state = self.state.rule_for(
+                &mut self.stack,
+                &mut self.tree,
+                *t
+            )?;
         }
 
         if self.state.finishable() {

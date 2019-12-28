@@ -9,12 +9,6 @@ pub enum BinaryOp {
     Mod,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Fragment {
-    Literal(i64),
-    Op(BinaryOp),
-}
-
 /// The possible syntax tree elements.
 ///
 /// While a single literal value (eg. "5") is valid syntax, more
@@ -46,7 +40,7 @@ impl AST {
         AST(n)
     }
 
-    pub fn top(&self) -> &Node {
+    pub fn root(&self) -> &Node {
         &self.0
     }
 }
