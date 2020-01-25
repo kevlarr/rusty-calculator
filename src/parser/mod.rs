@@ -39,18 +39,8 @@ pub fn parse(seq: &TokenSequence) -> Result<AST, ()> {
 mod tests {
     use {
         crate::{
-            lexer::{
-                Symbol,
-                Token,
-                TokenSequence,
-            },
-            parser::{
-                syntax::{
-                    AST,
-                    BinaryOp,
-                    Node,
-                },
-            },
+            lexer::{Symbol, Token, TokenSequence},
+            parser::syntax::{AST, BinaryOp, Node},
         },
     };
 

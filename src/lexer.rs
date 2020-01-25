@@ -30,7 +30,7 @@ pub enum Token {
 }
 
 
-/// A sequence of tokens, surprise surprise.
+/// Surprise, a holder of tokens
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenSequence(Vec<Token>);
 
@@ -64,13 +64,13 @@ impl TokenSequence {
 
 /// The set of possible lexer errors.
 #[derive(Debug, PartialEq)]
-pub enum LexerError {
+pub enum LexErr {
     InvalidCharacter(char),
     UnexpectedCharacter { position: usize, chr: char },
 }
-impl fmt::Display for LexerError {
+impl fmt::Display for LexErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use self::LexerError::*;
+        use self::LexErr::*;
 
         match self {
             InvalidCharacter(c) => write!(f, "Invalid character: '{}'", c),
@@ -81,22 +81,24 @@ impl fmt::Display for LexerError {
     }
 }
 
-impl error::Error for LexerError {}
+impl error::Error for LexErr {}
+
+type LexResult = Result<TokenSequence, LexErr>;
 
 /// Receives input text and attempts to generate a valid token stream.
-pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
+pub fn lex(s: &str) -> LexResult {
     use self::Symbol::*;
 
-    let charmap: HashMap<char, Symbol> = vec![
-        ('*', Asterisk),
-        ('^', Caret),
-        ('/', ForwardSlash),
-        ('-', Minus),
-        (')', ParenClose),
-        ('(', ParenOpen),
-        ('%', Percent),
-        ('+', Plus),
-    ].into_iter().collect();
+    let charmap = map!{
+        '*' => Asterisk,
+        '^' => Caret,
+        '/' => ForwardSlash,
+        '-' => Minus,
+        ')' => ParenClose,
+        '(' => ParenOpen,
+        '%' => Percent,
+        '+' => Plus
+    };
 
     let mut tokens = TokenSequence::new();
     let mut chars = s.chars().enumerate().peekable();
@@ -116,7 +118,7 @@ pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
             while let Some(&(i2, c2)) = chars.peek() {
                 if c2 == ',' {
                     if comma_last {
-                        return Err(LexerError::UnexpectedCharacter {
+                        return Err(LexErr::UnexpectedCharacter {
                             position: i2 + 1,
                             chr: c2,
                         });
@@ -138,7 +140,7 @@ pub fn lex(s: &str) -> Result<TokenSequence, LexerError> {
             continue;
         }
 
-        return Err(LexerError::InvalidCharacter(c));
+        return Err(LexErr::InvalidCharacter(c));
     }
 
     Ok(tokens)
@@ -218,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_lex_error() {
-        use self::LexerError::*;
+        use self::LexErr::*;
 
         let e = lex("x").err().unwrap();
 

@@ -1,8 +1,28 @@
+macro_rules! map {
+    ( $( $key:expr => $val:expr),* ) => {{
+        let mut map = HashMap::new();
+        $(
+            map.insert($key, $val);
+        )*
+        map
+    }};
+
+    ( $( $key:expr => $val:expr,)* ) => {{
+        let mut map = HashMap::new();
+        $(
+            map.insert($key, $val);
+        )*
+        map
+    }};
+}
+
 pub mod lexer;
-pub mod parser;
+mod parser;
 pub mod types;
 
 use types::{Binary, ParseResult};
+
+
 
 pub fn add(x: i64, y: i64) -> ParseResult {
     execute(|a, b| a + b, x, y)
