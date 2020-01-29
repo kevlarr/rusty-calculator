@@ -21,7 +21,6 @@ pub enum Symbol {
     Plus,
 }
 
-
 /// The set of possible tokens.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Token {
@@ -178,6 +177,13 @@ mod tests {
             Num(0),
             Sym(Minus),
             Num(0),
+        ]);
+
+        assert("5 - -4", vec![
+            Num(5),
+            Sym(Minus),
+            Sym(Minus),
+            Num(4),
         ]);
 
         assert("5 + 4", vec![

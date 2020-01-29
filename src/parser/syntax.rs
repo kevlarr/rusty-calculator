@@ -1,6 +1,9 @@
-/// The supported binary operations for building a syntax tree.
+use crate::lexer::Symbol;
+
+
+/// The supported binary BinaryOp for building a syntax tree.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum BinaryOp {
+pub enum Operation {
     Add,
     Sub,
     Mul,
@@ -9,38 +12,48 @@ pub enum BinaryOp {
     Mod,
 }
 
+impl Operation {
+    pub fn from_symbol(s: Symbol) -> Result<Self, String> {
+        use self::{Operation::*, Symbol::*};
+
+        Ok(match s {
+            Asterisk => Mul,
+            Caret => Exp,
+            ForwardSlash => Div,
+            Minus => Sub,
+            Percent => Mod,
+            Plus => Add,
+
+            _ => return Err(format!("Cannot convert symbol '{:?}' to operation", s)),
+        })
+    }
+}
+
 /// The possible syntax tree elements.
-///
-/// While a single literal value (eg. "5") is valid syntax, more
-/// interesting (read: useful) things happen when the original
-/// expression is a little more complex.
-///
-/// Additionally, while "5 * 3 + 2" is valid syntax even without
-/// parentheses, the expression will be converted to a tree equivalent
-/// to "(5 * 3) + 2" such that any expression can be described in terms
-/// of either a single literal value or a binary operation whose operands
-/// are potentially nested expressions.
 #[derive(Debug, PartialEq)]
-pub enum Node {
+pub enum Expr {
     Empty,
-    Expression(Box<Node>, BinaryOp, Box<Node>),
+    BinaryOp(Box<Expr>, Operation, Box<Expr>),
+    Negation(Box<Expr>),
     Literal(i64),
 }
 
-/// Blergh.
 #[derive(Debug, PartialEq)]
-pub struct AST(Node);
+pub struct AST(Expr);
 
 impl AST {
     pub fn new() -> Self {
-        AST(Node::Empty)
+        AST(Expr::Empty)
     }
 
-    pub fn with_syntax(n: Node) -> Self {
+    pub fn with_syntax(n: Expr) -> Self {
         AST(n)
     }
 
-    pub fn root(&self) -> &Node {
-        &self.0
-    }
+    //pub fn root(&self) -> &Expr {
+        //&self.0
+    //}
+
+    //pub fn evaluate() {
+    //}
 }

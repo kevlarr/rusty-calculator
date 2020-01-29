@@ -1,22 +1,25 @@
 use std::{error, fmt};
+use crate::lexer::Token;
 
 #[derive(Debug, PartialEq)]
-pub enum ParseError {
+pub enum ParseErr {
     IncompleteSequence,
     StateNotFinishable,
-    UnexpectedToken,
+    UnexpectedToken(Token),
+    GeneralError(String),
 }
 
-impl error::Error for ParseError {}
+impl error::Error for ParseErr {}
 
-impl fmt::Display for ParseError {
+impl fmt::Display for ParseErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use self::ParseError::*;
+        use self::ParseErr::*;
 
         match self {
             IncompleteSequence => write!(f, "Another token was expected"),
             StateNotFinishable => write!(f, "Current state is not a finish state."),
-            UnexpectedToken => write!(f, "A token was unexpected"),
+            UnexpectedToken(t) => write!(f, "Token {:?} was unexpected", t),
+            GeneralError(e) => write!(f, "{}", e),
         }
     }
 }
