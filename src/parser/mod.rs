@@ -10,13 +10,10 @@ use {
         parser::{
             error::ParseErr,
             //machine::Machine,
-            syntax::{AST, Expr, Operation},
+            syntax::{Expr, Operation},
         },
     },
 };
-
-
-pub type ParseResult = Result<AST, ParseErr>;
 
 
 pub fn parse(seq: &TokenSequence) -> Result<Expr, ParseErr> {
@@ -37,17 +34,73 @@ fn to_ast(tokens: &mut Iter<Token>) -> Result<Expr, ParseErr> {
 
     while let Some(&t) = tokens.next() {
         expr = match t {
+
             Tk::Num(n) => match expr {
+
                 Ex::Empty =>
                     Ex::Literal(n),
 
-                Ex::BinaryOp(lhs, op, rhs) if *lhs != Ex::Empty && *rhs == Ex::Empty =>
+                Ex::BinaryOp(lhs, op, rhs) if *rhs == Ex::Empty =>
                     Ex::BinaryOp(lhs, op, Box::new(Ex::Literal(n))),
 
-                Ex::Negation(expr) if *expr == Ex::Empty =>
+                Ex::Negation(val) if *val == Ex::Empty =>
                     Ex::Negation(Box::new(Ex::Literal(n))),
 
-                _ => return Err(ParseErr::UnexpectedToken(t)),
+                //Ex::Negation(expr) if *expr == Ex::Empty =>
+                    //Ex::Negation(Box::new(Ex::Literal(n))),
+
+                //Ex::BinaryOp(lhs, op, rhs)
+
+                //Ex::BinaryOp(lhs, op, rhs) if *rhs == Ex::Empty =>
+                    //Ex::BinaryOp(Box::new(lhs), op, Box::new(Ex::Literal(n))),
+
+
+                //Ex::BinaryOp(lhs, op, rhs) => match (*lhs, *rhs) {
+
+                    //(lhs, Ex::Empty) =>
+                        //Ex::BinaryOp(Box::new(lhs), op, Box::new(Ex::Literal(n))),
+
+                    //(Ex::Nested(expr), rhs) => match *expr {
+                        //Ex::BinaryOp(lhs2, op, rhs2) if 
+                    //},
+
+
+                    // FIXME these need to look for nested
+                    //(lhs, Ex::BinaryOp(lhs2, op2, rhs2)) if *rhs2 == Ex::Empty =>
+                        //Ex::BinaryOp(
+                            //Box::new(lhs),
+                            //op,
+                            //Box::new(Ex::Nested(
+                                //Box::new(Ex::BinaryOp(
+                                    //lhs2,
+                                    //op2,
+                                    //Box::new(Ex::Literal(n)),
+                                //)),
+                            //)),
+                        //),
+
+                    // FIXME these need to look for nested
+                    //(Ex::BinaryOp(lhs2, op2, rhs2), rhs) if *rhs2 == Ex::Empty =>
+                        //Ex::BinaryOp(
+                            //Box::new(Ex::BinaryOp(lhs2, op2, Box::new(Ex::Literal(n)))),
+                            //op,
+                            //Box::new(rhs)
+                        //),
+
+                    //_ => return Err(ParseErr::UnexpectedToken(t)),
+                    //(lhs, rhs) => {
+                        //eprintln!("(lhs, rhs): {:?}", (lhs, rhs));
+                        //return Err(ParseErr::UnexpectedToken(t));
+                    //},
+                //},
+
+                //Ex::BinaryOp(lhs, op, rhs) if *lhs != Ex::Empty && *rhs == Ex::Empty =>
+                    //Ex::BinaryOp(lhs, op, Box::new(Ex::Literal(n))),
+
+                _ => {
+                    eprintln!("expr: {:?}", expr);
+                    return Err(ParseErr::UnexpectedToken(t));
+                },
             },
 
             Tk::Sym(Sy::ParenOpen) => {
@@ -55,45 +108,94 @@ fn to_ast(tokens: &mut Iter<Token>) -> Result<Expr, ParseErr> {
 
                 match expr {
                     Ex::Empty =>
-                        sub_expr,
+                        Ex::Nested(Box::new(sub_expr)),
 
                     Ex::BinaryOp(lhs, op, rhs) if *lhs != Ex::Empty && *rhs == Ex::Empty =>
-                        Ex::BinaryOp(lhs, op, Box::new(sub_expr)),
+                        Ex::BinaryOp(
+                            lhs,
+                            op,
+                            Box::new(Ex::Nested(Box::new(sub_expr)))
+                        ),
 
                     Ex::Negation(expr) if *expr == Ex::Empty =>
-                        Ex::Negation(Box::new(sub_expr)),
+                        Ex::Negation(Box::new(Ex::Nested(Box::new(sub_expr)))),
 
-                    _ => return Err(ParseErr::UnexpectedToken(t)),
+                    //_ => return Err(ParseErr::UnexpectedToken(t)),
+
+                    _ => {
+                        eprintln!("expr: {:?}", expr);
+                        return Err(ParseErr::UnexpectedToken(t));
+                    },
                 }
             },
 
             Tk::Sym(Sy::ParenClose) => return Ok(expr),
 
+            // Minus is the only operator that's both unary and binary,
+            // so it needs its own handling
             Tk::Sym(Sy::Minus) => match expr {
                 Ex::Empty =>
                     Ex::Negation(Box::new(Ex::Empty)),
 
+                Ex::BinaryOp(lhs, op, rhs) => match *rhs {
+                    Ex::Empty =>
+                        Ex::BinaryOp(lhs, op, Box::new(Ex::Negation(Box::new(Ex::Empty)))),
 
-                Ex::BinaryOp(lhs, op, rhs) if *lhs != Ex::Empty && *rhs == Ex::Empty =>
-                    Ex::BinaryOp(lhs, op, Box::new(Ex::Negation(Box::new(Ex::Empty)))),
+                        // Don't need to check precedence, because subtraction has
+                        // precedence over nothing
+                        _ => 
+                            Ex::BinaryOp(
+                                Box::new(Ex::BinaryOp(lhs, op, rhs)),
+                                Op::Sub,
+                                Box::new(Ex::Empty)
+                            )
+                },
 
                 Ex::Literal(n) =>
                     Ex::BinaryOp(Box::new(Ex::Literal(n)), Op::Sub, Box::new(Ex::Empty)),
 
-                _ => return Err(ParseErr::UnexpectedToken(t)),
+                //_ => return Err(ParseErr::UnexpectedToken(t)),
+                _ => {
+                    eprintln!("expr: {:?}", expr);
+                    return Err(ParseErr::UnexpectedToken(t));
+                },
             },
 
-            // Asterisk | Caret | ForwardSlash | Percent | Plus
-            Tk::Sym(s) => match expr {
-                Ex::Empty =>
-                    return Err(ParseErr::UnexpectedToken(t)),
+            // Asterisk | Caret | FwdSlash | Percent | Plus
+            Tk::Sym(s) => match Op::from_symbol(s) {
+                Ok(op) => match expr {
+                    Ex::Empty =>
+                        return Err(ParseErr::UnexpectedToken(t)),
 
-                e => match Op::from_symbol(s) {
-                    Ok(op) =>
-                        Ex::BinaryOp(Box::new(e), op, Box::new(Ex::Empty)), 
-                    Err(e) =>
-                        return Err(ParseErr::GeneralError(e)),
+                    Ex::BinaryOp(lhs, prior_op, rhs) => match *rhs {
+                        Ex::Empty => return Err(ParseErr::UnexpectedToken(t)),
+
+                        _ => if op.has_precedence_over(prior_op) {
+                            Ex::BinaryOp(
+                                lhs,
+                                prior_op,
+                                Box::new(Ex::Nested(
+                                    Box::new(Ex::BinaryOp(
+                                        rhs,
+                                        op,
+                                        Box::new(Ex::Empty)
+                                    )),
+                                )),
+                            )
+                        } else {
+                            Ex::BinaryOp(
+                                Box::new(Ex::BinaryOp(lhs, prior_op, rhs)),
+                                op,
+                                Box::new(Ex::Empty)
+                            )
+                        }
+                    },
+
+                    expr =>
+                        Ex::BinaryOp(Box::new(expr), op, Box::new(Ex::Empty)),
                 },
+                Err(e) =>
+                    return Err(ParseErr::GeneralError(e)),
             },
         };
     }
@@ -104,27 +206,188 @@ fn to_ast(tokens: &mut Iter<Token>) -> Result<Expr, ParseErr> {
 
 #[cfg(test)]
 mod tests {
-    use {
-        crate::{
-            lexer::{Symbol, Token, TokenSequence},
-            parser::syntax::{Operation, Expr},
-        },
+    use super::{
+        TokenSequence,
+        Symbol as Sy,
+        Token as Tk,
+        Operation as Op,
+        Expr as Ex,
+        parse,
     };
 
+    fn assert(tokens: Vec<super::Token>, expr: super::Expr) {
+        assert_eq!(
+            parse(&TokenSequence::with_tokens(tokens)),
+            Ok(expr),
+        );
+    }
+
     #[test]
+    fn parse_empty() {
+        use self::*;
+
+        assert(vec![], Ex::Empty);
+    }
+
+    #[test]
+    fn parse_literal() {
+        use self::*;
+
+        assert(vec![Tk::Num(15)], Ex::Literal(15));
+    }
+
+    #[test]
+    fn parse_parenthesized_literal() {
+        use self::*;
+
+        assert(
+            vec![
+                Tk::Sym(Sy::ParenOpen),
+                Tk::Num(15),
+                Tk::Sym(Sy::ParenClose),
+            ],
+            Ex::Nested(Box::new(Ex::Literal(15)))
+        );
+    }
+
+    #[test]
+    fn parse_binary_op() {
+        use self::*;
+
+        let pairs = [
+            (Sy::Plus,     Op::Add),
+            (Sy::Minus,    Op::Sub),
+            (Sy::Asterisk, Op::Mul),
+            (Sy::FwdSlash, Op::Div),
+            (Sy::Caret,    Op::Exp),
+            (Sy::Percent,  Op::Mod),
+        ];
+
+        for (sym, op) in pairs.iter() {
+            assert(
+                vec![
+                    Tk::Num(15),
+                    Tk::Sym(*sym),
+                    Tk::Num(0),
+                ],
+                Ex::BinaryOp(
+                    Box::new(Ex::Literal(15)),
+                    *op,
+                    Box::new(Ex::Literal(0)),
+                )
+            );
+        }
+    }
+
+    #[test]
+    fn parse_parenthesized_binary_op() {
+        use self::*;
+
+        let pairs = [
+            (Sy::Plus,     Op::Add),
+            (Sy::Minus,    Op::Sub),
+            (Sy::Asterisk, Op::Mul),
+            (Sy::FwdSlash, Op::Div),
+            (Sy::Caret,    Op::Exp),
+            (Sy::Percent,  Op::Mod),
+        ];
+
+        for (sym, op) in pairs.iter() {
+            assert(
+                vec![
+                    Tk::Sym(Sy::ParenOpen),
+                    Tk::Num(15),
+                    Tk::Sym(*sym),
+                    Tk::Num(0),
+                    Tk::Sym(Sy::ParenClose),
+                ],
+                Ex::Nested(
+                    Box::new(Ex::BinaryOp(
+                        Box::new(Ex::Literal(15)),
+                        *op,
+                        Box::new(Ex::Literal(0)),
+                    ))
+                )
+            );
+        }
+    }
+
+    #[test]
+    fn parse_negation() {
+        use self::*;
+
+        assert(
+            vec![
+                Tk::Sym(Sy::ParenOpen),
+                Tk::Sym(Sy::Minus),
+                Tk::Num(15),
+                Tk::Sym(Sy::ParenClose),
+            ],
+            Ex::Nested(
+                Box::new(Ex::Negation(
+                    Box::new(Ex::Literal(15))
+                )),
+            )
+        );
+    }
+
+    #[test]
+    fn parse_parenthesized_negation() {
+        use self::*;
+
+        assert(
+            vec![
+                Tk::Sym(Sy::Minus),
+                Tk::Num(15),
+            ],
+            Ex::Negation(Box::new(Ex::Literal(15))),
+        );
+    }
+
+    #[test]
+    fn parse_multiple_identical_operations_left_associative() {
+        use self::*;
+
+        let pairs = [
+            (Sy::Plus,     Op::Add),
+            (Sy::Minus,    Op::Sub),
+            (Sy::Asterisk, Op::Mul),
+            (Sy::FwdSlash, Op::Div),
+            (Sy::Caret,    Op::Exp),
+            (Sy::Percent,  Op::Mod),
+        ];
+
+        for (sym, op) in pairs.iter() {
+            assert(
+                vec![
+                    Tk::Num(1),
+                    Tk::Sym(*sym),
+                    Tk::Num(3),
+                    Tk::Sym(*sym),
+                    Tk::Num(5),
+                ],
+                Ex::BinaryOp(
+                    Box::new(Ex::BinaryOp(
+                        Box::new(Ex::Literal(1)),
+                        *op,
+                        Box::new(Ex::Literal(3)),
+                    )),
+                    *op,
+                    Box::new(Ex::Literal(5)),
+                ),
+            );
+        }
+    }
+
+
+
+
     fn parse_success() {
-        use self::{
-            TokenSequence,
-            Operation as Op,
-            Symbol as Sy,
-            Token as Tk,
-            Expr as Ex,
-        };
-        use super::parse;
+        use self::*;
 
         assert_eq!(
             parse(&TokenSequence::new()),
-            Ok(Expr::Empty),
+            Ok(Ex::Empty),
         );
 
         let assert = |tokens, expr| assert_eq!(
@@ -143,7 +406,19 @@ mod tests {
         ));
 
         assert(vec![
-            // (1 + 3) * 5
+            Tk::Sym(Sy::ParenOpen),
+            Tk::Num(15),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(20),
+            Tk::Sym(Sy::ParenClose),
+        ], Ex::Nested(Box::new(Ex::BinaryOp(
+            Box::new(Ex::Literal(15)),
+            Op::Add,
+            Box::new(Ex::Literal(20)),
+        ))));
+
+        /// (1 + 3) * 5
+        assert(vec![
             Tk::Sym(Sy::ParenOpen),
             Tk::Num(1),
             Tk::Sym(Sy::Plus),
@@ -151,82 +426,130 @@ mod tests {
             Tk::Sym(Sy::ParenClose),
             Tk::Sym(Sy::Asterisk),
             Tk::Num(5),
-        ], Expr::BinaryOp(
-            Box::new(Expr::BinaryOp(
-                Box::new(Expr::Literal(1)),
-                Op::Add,
-                Box::new(Expr::Literal(3)),
+        ], Ex::BinaryOp(
+            Box::new(Ex::Nested(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(1)),
+                    Op::Add,
+                    Box::new(Ex::Literal(3)),
+                )),
             )),
             Op::Mul,
-            Box::new(Expr::Literal(5)),
+            Box::new(Ex::Literal(5)),
+        ));
+
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Sym(Sy::ParenOpen),
+                Tk::Num(5),
+                Tk::Sym(Sy::Plus),
+                Tk::Num(2),
+            Tk::Sym(Sy::ParenClose),
+        ], Ex::BinaryOp(
+            Box::new(Ex::Literal(1)),
+            Op::Mul,
+            Box::new(Ex::Nested(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(5)),
+                    Op::Add,
+                    Box::new(Ex::Literal(2)),
+                )),
+            )),
         ));
 
         // Test WITHOUT operator precedence
+        // 1 + ((5 * 2) ^ (4 - 2))
         assert(vec![
-            // 1 + ((5 * 2) ^ (4 - 2))
             Tk::Num(1),
             Tk::Sym(Sy::Plus),
             Tk::Sym(Sy::ParenOpen),
-            Tk::Sym(Sy::ParenOpen),
-            Tk::Num(5),
-            Tk::Sym(Sy::Asterisk),
-            Tk::Num(2),
+                Tk::Sym(Sy::ParenOpen),
+                    Tk::Num(5),
+                    Tk::Sym(Sy::Asterisk),
+                    Tk::Num(2),
+                Tk::Sym(Sy::ParenClose),
+                Tk::Sym(Sy::Caret),
+                Tk::Sym(Sy::ParenOpen),
+                    Tk::Num(4),
+                    Tk::Sym(Sy::Minus),
+                    Tk::Num(2),
+                Tk::Sym(Sy::ParenClose),
             Tk::Sym(Sy::ParenClose),
-            Tk::Sym(Sy::Caret),
-            Tk::Sym(Sy::ParenOpen),
-            Tk::Num(4),
-            Tk::Sym(Sy::Minus),
-            Tk::Num(2),
-            Tk::Sym(Sy::ParenClose),
-            Tk::Sym(Sy::ParenClose),
-        ], Expr::BinaryOp(
-            Box::new(Expr::Literal(1)),
+        ], Ex::BinaryOp(
+            Box::new(Ex::Literal(1)),
             Op::Add,
-            Box::new(Expr::BinaryOp(
-                Box::new(Expr::BinaryOp(
-                    Box::new(Expr::Literal(5)),
-                    Op::Mul,
-                    Box::new(Expr::Literal(2)),
-                )),
-                Op::Exp,
-                Box::new(Expr::BinaryOp(
-                    Box::new(Expr::Literal(4)),
-                    Op::Sub,
-                    Box::new(Expr::Literal(2)),
+            Box::new(Ex::Nested(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Nested(
+                        Box::new(Ex::BinaryOp(
+                            Box::new(Ex::Literal(5)),
+                            Op::Mul,
+                            Box::new(Ex::Literal(2)),
+                        )),
+                    )),
+                    Op::Exp,
+                    Box::new(Ex::Nested(
+                        Box::new(Ex::BinaryOp(
+                            Box::new(Ex::Literal(4)),
+                            Op::Sub,
+                            Box::new(Ex::Literal(2)),
+                        )),
+                    )),
                 )),
             )),
         ));
 
-        // Test WITH OPERATOR PRECEDENCE
-        //assert(vec![
-            //// 1 + 5 * 2 ^ (4 - 2)
-            //Tk::Num(1),
-            //Tk::Sym(Sy::Plus),
-            //Tk::Num(5),
-            //Tk::Sym(Sy::Asterisk),
-            //Tk::Num(2),
-            //Tk::Sym(Sy::Caret),
-            //Tk::Sym(Sy::ParenOpen),
-            //Tk::Num(4),
-            //Tk::Sym(Sy::Minus),
-            //Tk::Num(2),
-            //Tk::Sym(Sy::ParenClose),
-        //], Expr::BinaryOp(
-            //Box::new(Expr::Literal(1)),
-            //Op::Add,
-            //Box::new(Expr::BinaryOp(
-                //Box::new(Expr::Literal(5)),
-                //Op::Mul,
-                //Box::new(Expr::BinaryOp(
-                    //Box::new(Expr::Literal(2)),
-                    //Op::Exp,
-                    //Box::new(Expr::BinaryOp(
-                        //Box::new(Expr::Literal(4)),
-                        //Op::Sub,
-                        //Box::new(Expr::Literal(2)),
-                    //))
-                //)),
-            //)),
-        //));
+        // Test WITH operator precedence
+        // 1 + 5 * 2 ^ (4 - 2)
+        // => 1 + (5 * (2 ^ (4 - 2)))
+
+        /*
+         BinaryOp
+            Literal(1)
+            Add
+            BinaryOp
+                BinaryOp
+                    Literal(5)
+                    Mul
+                    Literal(2))
+                Exp
+                Empty
+        */
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(5),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Num(2),
+            Tk::Sym(Sy::Caret),
+            Tk::Sym(Sy::ParenOpen),
+                Tk::Num(4),
+                Tk::Sym(Sy::Minus),
+                Tk::Num(2),
+            Tk::Sym(Sy::ParenClose),
+        ], Ex::BinaryOp(
+            Box::new(Ex::Literal(1)),
+            Op::Add,
+            Box::new(Ex::Nested(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(5)),
+                    Op::Mul,
+                    Box::new(Ex::Nested(
+                        Box::new(Ex::BinaryOp(
+                            Box::new(Ex::Literal(2)),
+                            Op::Exp,
+                            Box::new(Ex::Nested(
+                                Box::new(Ex::BinaryOp(
+                                    Box::new(Ex::Literal(4)),
+                                    Op::Sub,
+                                    Box::new(Ex::Literal(2)),
+                                )),
+                            )),
+                        )),
+                    )),
+                )),
+            )),
+        ));
     }
 }

@@ -13,7 +13,7 @@ use {
 pub enum Symbol {
     Asterisk,
     Caret,
-    ForwardSlash,
+    FwdSlash,
     Minus,
     ParenClose,
     ParenOpen,
@@ -91,7 +91,7 @@ pub fn lex(s: &str) -> LexResult {
     let charmap = map!{
         '*' => Asterisk,
         '^' => Caret,
-        '/' => ForwardSlash,
+        '/' => FwdSlash,
         '-' => Minus,
         ')' => ParenClose,
         '(' => ParenOpen,
@@ -200,7 +200,7 @@ mod tests {
             Sym(ParenOpen),
             Sym(Minus),
             Num(2),
-            Sym(ForwardSlash),
+            Sym(FwdSlash),
             Num(0),
             Sym(ParenClose),
         ]);
@@ -215,7 +215,7 @@ mod tests {
         assert("*^\n/-)(%+", vec![
             Sym(Asterisk),
             Sym(Caret),
-            Sym(ForwardSlash),
+            Sym(FwdSlash),
             Sym(Minus),
             Sym(ParenClose),
             Sym(ParenOpen),

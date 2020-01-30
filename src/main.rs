@@ -17,8 +17,6 @@ fn main() {
 
     match args[1].as_ref() {
         "-i" => interact(),
-
-        // TODO: Keep the input in slice form
         _ => evaluate(&args[1..].join(" ")),
     }
 }

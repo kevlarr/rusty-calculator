@@ -19,13 +19,27 @@ impl Operation {
         Ok(match s {
             Asterisk => Mul,
             Caret => Exp,
-            ForwardSlash => Div,
+            FwdSlash => Div,
             Minus => Sub,
             Percent => Mod,
             Plus => Add,
 
             _ => return Err(format!("Cannot convert symbol '{:?}' to operation", s)),
         })
+    }
+
+    pub fn has_precedence_over(&self, other: Operation) -> bool {
+        self.precedence() > other.precedence()
+    }
+
+    fn precedence(&self) -> usize {
+        use self::Operation::*;
+
+        match self {
+            Exp => 3,
+            Mul | Div | Mod => 2,
+            Add | Sub => 1,
+        }
     }
 }
 
@@ -34,26 +48,7 @@ impl Operation {
 pub enum Expr {
     Empty,
     BinaryOp(Box<Expr>, Operation, Box<Expr>),
-    Negation(Box<Expr>),
     Literal(i64),
-}
-
-#[derive(Debug, PartialEq)]
-pub struct AST(Expr);
-
-impl AST {
-    pub fn new() -> Self {
-        AST(Expr::Empty)
-    }
-
-    pub fn with_syntax(n: Expr) -> Self {
-        AST(n)
-    }
-
-    //pub fn root(&self) -> &Expr {
-        //&self.0
-    //}
-
-    //pub fn evaluate() {
-    //}
+    Negation(Box<Expr>),
+    Nested(Box<Expr>),
 }
