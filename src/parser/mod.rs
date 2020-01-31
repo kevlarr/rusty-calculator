@@ -557,6 +557,43 @@ mod tests {
         ));
     }
 
+
+    #[test]
+    fn parse_gnarly_thing_with_precedence_and_no_parens() {
+        use self::*;
+
+        // 1 + 5 * 2 ^ 4 - 2
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(5),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Num(2),
+            Tk::Sym(Sy::Caret),
+            Tk::Num(4),
+            Tk::Sym(Sy::Minus),
+            Tk::Num(2),
+        ], Ex::BinaryOp(
+            Box::new(Ex::BinaryOp(
+                Box::new(Ex::Literal(1)),
+                Op::Add,
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(5)),
+                    Op::Mul,
+                    Box::new(Ex::BinaryOp(
+                        Box::new(Ex::Literal(2)),
+                        Op::Exp,
+                        Box::new(Ex::Literal(4)),
+                    ))
+                )),
+            )),
+            Op::Sub,
+            Box::new(Ex::Literal(2)),
+        ));
+    }
+
+
+
     #[test]
     fn parse_gnarly_thing_with_precedence_and_some_parens() {
         use self::*;
@@ -566,24 +603,6 @@ mod tests {
         // 1 + 5 * 2 ^ (4 - 2)
         //
         // .. should be => 1 + (5 * (2 ^ (4 - 2)))
-
-        /*
-          left: `Err(UnexpectedToken(Sym(ParenOpen)))`,
-
-        BinaryOp
-            lhs: Literal(1)
-            Add
-            rhs: Nested
-                BinaryOp
-                    BinaryOp
-                        Literal(5)
-                        Mul
-                        Literal(2))
-                    Exp
-                    Empty
-        */
-
-
         assert(vec![
             Tk::Num(1),
             Tk::Sym(Sy::Plus),
