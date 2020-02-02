@@ -44,11 +44,10 @@ impl Operation {
 }
 
 /// The possible syntax tree elements.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Empty,
     BinaryOp(Box<Expr>, Operation, Box<Expr>),
     Literal(i64),
     Negation(Box<Expr>),
-    Nested(Box<Expr>),
 }
