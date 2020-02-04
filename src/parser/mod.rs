@@ -165,8 +165,6 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
                     return Err(ParseErr::GeneralError(e)),
             },
         };
-
-        println!("{:?}", expr);
     }
 
     Ok(expr)
@@ -512,11 +510,49 @@ mod tests {
         ));
     }
 
-
     #[test]
-    fn parse_gnarly_things_with_precedence_and_no_parens() {
+    fn parse_precedence1() {
         use self::*;
 
+        // 1 * 2 * 5
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Num(2),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(5),
+        ], Ex::BinaryOp(
+            Box::new(Ex::BinaryOp(
+                Box::new(Ex::Literal(1)),
+                Op::Mul,
+                Box::new(Ex::Literal(2)),
+            )),
+            Op::Add,
+            Box::new(Ex::Literal(5)),
+        ));
+
+        // 1 + 2 * 5
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(2),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Num(5),
+        ], Ex::BinaryOp(
+            Box::new(Ex::Literal(1)),
+            Op::Add,
+            Box::new(Ex::BinaryOp(
+                Box::new(Ex::Literal(2)),
+                Op::Mul,
+                Box::new(Ex::Literal(5)),
+            )),
+        ));
+    }
+
+
+    #[test]
+    fn parse_precedence2() {
+        use self::*;
         /*
             1 * 5 + 4 - 2
 
@@ -552,171 +588,14 @@ mod tests {
             Op::Sub,
             Box::new(Ex::Literal(2)),
         ));
+    }
 
+    #[test]
+    fn parse_precedence3() {
+        use self::*;
 
-        /*
-            1 + 5 * 2 ^ 4 - 2
+        // 1 + 5 * 2 ^ 4 - 2
 
-            BinaryOp
-                BinaryOp
-                    Literal(1)
-                    Add
-                    BinaryOp
-                        Literal(5)
-                        Mul
-                        BinaryOp
-                            Literal(2)
-                            Exp
-                            Literal(4)
-                Sub
-                Literal(2)
-
-
-            1   Literal(1)
-
-            +   BinaryOp
-                    Literal(1)
-                    Plus
-                    Exmpty
-
-            5   BinaryOp
-                    Literal(1)
-                    Plus
-                    Literal(5)
-
-                -> Peek: if operator, check precedence
-                    - Greater, so restructure and then run recursively
-
-                BinaryOp
-                    Literal(1)
-                    Add
-                    BinaryOp
-                        Literal(5)
-                        Mul
-                        Empty
-
-            2   BinaryOp
-                    Literal(1)
-                    Add
-                    BinaryOp
-                        Literal(5)
-                        Mul
-
-                -> Peek: if operator, check precedence
-                    - Greater, so restructure and then run recursively
-
-                BinaryOp
-                    Literal(1)
-                    Add
-                    BinaryOp
-                        Literal(5)
-                        Mul
-                        BinaryOp
-                            Literal(2)
-                            Exp
-                            Empty
-
-            4   BinaryOp
-                    Literal(1)
-                    Add
-                    BinaryOp
-                        Literal(5)
-                        Mul
-                        BinaryOp
-                            Literal(2)
-                            Exp
-                            Literal(4)
-
-                -> Peek: if operator, check precedence
-                    - Lesser, so return expression
-
-            -   BinaryOp
-                    BinaryOp
-                        ...
-                    Sub
-                    Empty
-
-            2   BinaryOp
-                    BinaryOp
-                        Literal(1)
-                        Add
-                        BinaryOp
-                            Literal(5)
-                            Mul
-                            BinaryOp
-                                Literal(2)
-                                Exp
-                                Literal(4)
-                    Sub
-                    Literal(2)
-        */
-
-        /*
-        GOT
-            1 + 5 * 2 ^ 4 - 2
-
-            BinaryOp
-                Literal(1)
-                Add
-                BinaryOp
-                    Literal(5)
-                    Mul
-                    BinaryOp
-                        BinaryOp
-                            Literal(2)
-                            Exp
-                            Literal(4)
-                        Sub
-                        Literal(2)
-
-        Literal(1)
-
-        BinaryOp
-            Literal(1)
-            Add
-            Empty
-
-
-            BinaryOp
-                Literal(5)
-                Mul
-                Empty
-
-
-                BinaryOp
-                    Literal(2)
-                    Exp
-                    Empty
-
-
-                BinaryOp
-                    Literal(2)
-                    Exp
-                    Literal(4)
-
-
-            BinaryOp
-                BinaryOp
-                    Literal(2)
-                    Exp
-                    Literal(4)
-                Sub
-                Empty
-
-
-            BinaryOp
-                BinaryOp
-                    Literal(2)
-                    Exp
-                    Literal(4)
-                Sub
-                Literal(2)
-
-
-        BinaryOp(Literal(5), Mul, BinaryOp(BinaryOp(Literal(2), Exp, Literal(4)), Sub, Literal(2)))
-        BinaryOp(Literal(1), Add, BinaryOp(Literal(5), Mul, BinaryOp(BinaryOp(Literal(2), Exp, Literal(4)), Sub, Literal(2))))
-
-        */
         assert(vec![
             Tk::Num(1),
             Tk::Sym(Sy::Plus),
@@ -744,33 +623,9 @@ mod tests {
             Op::Sub,
             Box::new(Ex::Literal(2)),
         ));
-    }
 
+        // 1 + 5 * 2 ^ 4 / 2
 
-
-    #[test]
-    fn parse_gnarly_thing_with_precedence_and_some_parens() {
-        use self::*;
-
-        // 1 * 5 + 2 ^ 4
-
-        // Test WITH operator precedence...
-        //
-        // 1 + 5 * 2 ^ (4 - 2)
-        //
-        //  BinaryOp
-        //      Literal(1)
-        //      Add
-        //      BinaryOp
-        //          Literal(5)
-        //          Mul
-        //          BinaryOp
-        //              Literal(2)
-        //              Exp
-        //              BinaryOp
-        //                  Literal(4)
-        //                  Sub
-        //                  Literal(2)
         assert(vec![
             Tk::Num(1),
             Tk::Sym(Sy::Plus),
@@ -778,11 +633,42 @@ mod tests {
             Tk::Sym(Sy::Asterisk),
             Tk::Num(2),
             Tk::Sym(Sy::Caret),
-            Tk::Sym(Sy::ParenOpen),
-                Tk::Num(4),
-                Tk::Sym(Sy::Minus),
-                Tk::Num(2),
-            Tk::Sym(Sy::ParenClose),
+            Tk::Num(4),
+            Tk::Sym(Sy::Minus),
+            Tk::Num(2),
+        ], Ex::BinaryOp(
+            Box::new(Ex::Literal(1)),
+            Op::Add,
+            Box::new(Ex::BinaryOp(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(5)),
+                    Op::Mul,
+                    Box::new(Ex::BinaryOp(
+                        Box::new(Ex::Literal(2)),
+                        Op::Exp,
+                        Box::new(Ex::Literal(4)),
+                    ))
+                )),
+                Op::Div,
+                Box::new(Ex::Literal(2)),
+            )),
+        ));
+    }
+
+    #[test]
+    fn parse_precedence4() {
+        use self::*;
+
+        // 1 * 5 + 2 ^ 4
+
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Num(5),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(2),
+            Tk::Sym(Sy::Caret),
+            Tk::Num(4),
         ], Ex::BinaryOp(
             Box::new(Ex::Literal(1)),
             Op::Add,
@@ -792,13 +678,33 @@ mod tests {
                 Box::new(Ex::BinaryOp(
                     Box::new(Ex::Literal(2)),
                     Op::Exp,
-                    Box::new(Ex::BinaryOp(
-                        Box::new(Ex::Literal(4)),
-                        Op::Sub,
-                        Box::new(Ex::Literal(2)),
-                    )),
+                    Box::new(Ex::Literal(4)),
                 )),
             )),
+        ));
+
+        // 1 * 5 ^ 2 + 4
+
+        assert(vec![
+            Tk::Num(1),
+            Tk::Sym(Sy::Asterisk),
+            Tk::Num(5),
+            Tk::Sym(Sy::Caret),
+            Tk::Num(2),
+            Tk::Sym(Sy::Plus),
+            Tk::Num(4),
+        ], Ex::BinaryOp(
+            Box::new(Ex::BinaryOp(
+                Box::new(Ex::Literal(1)),
+                Op::Mul,
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(5)),
+                    Op::Exp,
+                    Box::new(Ex::Literal(4)),
+                )),
+            )),
+            Op::Add,
+            Box::new(Ex::Literal(4)),
         ));
     }
 }
