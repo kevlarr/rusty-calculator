@@ -50,4 +50,5 @@ pub enum Expr {
     BinaryOp(Box<Expr>, Operation, Box<Expr>),
     Literal(i64),
     Negation(Box<Expr>),
+    SubExpr(Box<Expr>),
 }

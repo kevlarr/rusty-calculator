@@ -42,13 +42,13 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
 
                 match expr {
                     Ex::Empty =>
-                        sub_expr,
+                        Ex::SubExpr(Box::new(sub_expr)),
 
                     Ex::Negation(expr) if *expr == Ex::Empty =>
-                        Ex::Negation(Box::new(sub_expr)),
+                        Ex::Negation(Box::new(Ex::SubExpr(Box::new(sub_expr)))),
 
                     Ex::BinaryOp(lhs, op, rhs) if *rhs == Ex::Empty =>
-                        Ex::BinaryOp(lhs, op, Box::new(sub_expr)),
+                        Ex::BinaryOp(lhs, op, Box::new(Ex::SubExpr(Box::new(sub_expr)))),
 
                     _ => {
                         eprintln!("expr: {:?}", expr);
@@ -237,7 +237,9 @@ mod tests {
                 Tk::Num(15),
                 Tk::Sym(Sy::ParenClose),
             ],
-            Ex::Literal(15)
+            Ex::SubExpr(Box::new(
+                Ex::Literal(15)
+            ))
         );
     }
 
@@ -292,11 +294,13 @@ mod tests {
                     Tk::Num(0),
                     Tk::Sym(Sy::ParenClose),
                 ],
-                Ex::BinaryOp(
-                    Box::new(Ex::Literal(15)),
-                    *op,
-                    Box::new(Ex::Literal(0)),
-                )
+                Ex::SubExpr(Box::new(
+                    Ex::BinaryOp(
+                        Box::new(Ex::Literal(15)),
+                        *op,
+                        Box::new(Ex::Literal(0)),
+                    )
+                ))
             );
         }
     }
@@ -307,28 +311,91 @@ mod tests {
 
         assert(
             vec![
-                Tk::Sym(Sy::ParenOpen),
-                Tk::Sym(Sy::Minus),
-                Tk::Num(15),
-                Tk::Sym(Sy::ParenClose),
-            ],
-            Ex::Negation(
-                Box::new(Ex::Literal(15))
-            )
-        );
-    }
-
-    #[test]
-    fn parse_parenthesized_negation() {
-        use self::*;
-
-        assert(
-            vec![
                 Tk::Sym(Sy::Minus),
                 Tk::Num(15),
             ],
             Ex::Negation(Box::new(Ex::Literal(15))),
         );
+    }
+
+    #[test]
+    fn parse_negation_with_subexpr() {
+        use self::*;
+
+        // -(4 + 2)
+
+        assert(
+            vec![
+                Tk::Sym(Sy::Minus),
+                Tk::Sym(Sy::ParenOpen),
+                Tk::Num(4),
+                Tk::Sym(Sy::Plus),
+                Tk::Num(2),
+                Tk::Sym(Sy::ParenClose),
+            ],
+            Ex::Negation(Box::new(
+                Ex::SubExpr(Box::new(
+                    Ex::BinaryOp(
+                        Box::new(Ex::Literal(4)),
+                        Op::Add,
+                        Box::new(Ex::Literal(2)),
+                    ),
+                )),
+            ))
+        );
+    }
+
+    #[test]
+    fn parse_negation_in_subexpr() {
+        use self::*;
+
+        // (-15)
+
+        assert(
+            vec![
+                Tk::Sym(Sy::ParenOpen),
+                Tk::Sym(Sy::Minus),
+                Tk::Num(15),
+                Tk::Sym(Sy::ParenClose),
+            ],
+            Ex::SubExpr(Box::new(
+                Ex::Negation(
+                    Box::new(Ex::Literal(15))
+                )
+            ))
+        );
+    }
+
+    #[test]
+    fn parse_negation_after_operator() {
+        use self::*;
+
+        let pairs = [
+            (Sy::Plus,     Op::Add),
+            (Sy::Minus,    Op::Sub),
+            (Sy::Asterisk, Op::Mul),
+            (Sy::FwdSlash, Op::Div),
+            (Sy::Caret,    Op::Exp),
+            (Sy::Percent,  Op::Mod),
+        ];
+
+        for (sym, op) in pairs.iter() {
+            assert(
+                vec![
+                    Tk::Num(1),
+                    Tk::Sym(*sym),
+                    Tk::Sym(Sy::Minus),
+                    Tk::Num(5),
+                ],
+                Ex::BinaryOp(
+                    Box::new(Ex::Literal(1)),
+                    *op,
+                    Box::new(Ex::Negation(
+                        Box::new(Ex::Literal(5))
+                    )),
+                ),
+            );
+        }
     }
 
     #[test]
@@ -361,38 +428,6 @@ mod tests {
                     )),
                     *op,
                     Box::new(Ex::Literal(5)),
-                ),
-            );
-        }
-    }
-
-    #[test]
-    fn parse_negation_after_operator() {
-        use self::*;
-
-        let pairs = [
-            (Sy::Plus,     Op::Add),
-            (Sy::Minus,    Op::Sub),
-            (Sy::Asterisk, Op::Mul),
-            (Sy::FwdSlash, Op::Div),
-            (Sy::Caret,    Op::Exp),
-            (Sy::Percent,  Op::Mod),
-        ];
-
-        for (sym, op) in pairs.iter() {
-            assert(
-                vec![
-                    Tk::Num(1),
-                    Tk::Sym(*sym),
-                    Tk::Sym(Sy::Minus),
-                    Tk::Num(5),
-                ],
-                Ex::BinaryOp(
-                    Box::new(Ex::Literal(1)),
-                    *op,
-                    Box::new(Ex::Negation(
-                        Box::new(Ex::Literal(5))
-                    )),
                 ),
             );
         }
@@ -436,10 +471,12 @@ mod tests {
             Tk::Sym(Sy::Asterisk),
             Tk::Num(5),
         ], Ex::BinaryOp(
-            Box::new(Ex::BinaryOp(
-                Box::new(Ex::Literal(1)),
-                Op::Add,
-                Box::new(Ex::Literal(3)),
+            Box::new(Ex::SubExpr(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(1)),
+                    Op::Add,
+                    Box::new(Ex::Literal(3)),
+                )),
             )),
             Op::Mul,
             Box::new(Ex::Literal(5)),
@@ -449,6 +486,8 @@ mod tests {
     #[test]
     fn parse_parentheses_after_override_operator_precedence() {
         use self::*;
+
+        // 1 * (5 + 2)
 
         assert(vec![
             Tk::Num(1),
@@ -461,10 +500,12 @@ mod tests {
         ], Ex::BinaryOp(
             Box::new(Ex::Literal(1)),
             Op::Mul,
-            Box::new(Ex::BinaryOp(
-                Box::new(Ex::Literal(5)),
-                Op::Add,
-                Box::new(Ex::Literal(2)),
+            Box::new(Ex::SubExpr(
+                Box::new(Ex::BinaryOp(
+                    Box::new(Ex::Literal(5)),
+                    Op::Add,
+                    Box::new(Ex::Literal(2)),
+                )),
             )),
         ));
     }
@@ -473,8 +514,8 @@ mod tests {
     fn parse_gnarly_thing_with_parens_and_no_precedence() {
         use self::*;
 
-        // Test WITHOUT operator precedence
         // 1 + ((5 * 2) ^ (4 - 2))
+
         assert(vec![
             Tk::Num(1),
             Tk::Sym(Sy::Plus),
@@ -494,17 +535,23 @@ mod tests {
         ], Ex::BinaryOp(
             Box::new(Ex::Literal(1)),
             Op::Add,
-            Box::new(Ex::BinaryOp(
+            Box::new(Ex::SubExpr(
                 Box::new(Ex::BinaryOp(
-                    Box::new(Ex::Literal(5)),
-                    Op::Mul,
-                    Box::new(Ex::Literal(2)),
-                )),
-                Op::Exp,
-                Box::new(Ex::BinaryOp(
-                    Box::new(Ex::Literal(4)),
-                    Op::Sub,
-                    Box::new(Ex::Literal(2)),
+                    Box::new(Ex::SubExpr(
+                        Box::new(Ex::BinaryOp(
+                            Box::new(Ex::Literal(5)),
+                            Op::Mul,
+                            Box::new(Ex::Literal(2)),
+                        )),
+                    )),
+                    Op::Exp,
+                    Box::new(Ex::SubExpr(
+                        Box::new(Ex::BinaryOp(
+                            Box::new(Ex::Literal(4)),
+                            Op::Sub,
+                            Box::new(Ex::Literal(2)),
+                        )),
+                    )),
                 )),
             )),
         ));
