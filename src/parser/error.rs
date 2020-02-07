@@ -1,11 +1,12 @@
-use std::{error, fmt};
 use crate::lexer::Token;
+use std::{error, fmt};
 
 #[derive(Debug, PartialEq)]
 pub enum ParseErr {
     IncompleteSequence,
     StateNotFinishable,
     UnexpectedToken(Token),
+    NoEmptyNodeFound,
     GeneralError(String),
 }
 
@@ -19,6 +20,7 @@ impl fmt::Display for ParseErr {
             IncompleteSequence => write!(f, "Another token was expected"),
             StateNotFinishable => write!(f, "Current state is not a finish state."),
             UnexpectedToken(t) => write!(f, "Token {:?} was unexpected", t),
+            NoEmptyNodeFound => write!(f, "No empty node was found to insert expression"),
             GeneralError(e) => write!(f, "{}", e),
         }
     }

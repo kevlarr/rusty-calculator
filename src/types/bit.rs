@@ -1,7 +1,6 @@
-use ::std::fmt;
-use ::std::ops::{BitAnd, BitOr, BitXor, Not};
-use ::std::cmp::{Ordering, PartialOrd};
-
+use std::cmp::{Ordering, PartialOrd};
+use std::fmt;
+use std::ops::{BitAnd, BitOr, BitXor, Not};
 
 /// Bit: Representation of a transistor, either on or off
 #[derive(Copy, Clone, PartialEq)]
@@ -13,7 +12,6 @@ pub enum Bit {
 use self::Bit::*;
 
 impl Bit {
-
     /// Single-bit adder circuit for two inputs
     pub fn half_adder(b1: Bit, b2: Bit) -> (Bit, Bit) {
         (b1 ^ b2, b1 & b2)
@@ -37,7 +35,7 @@ impl fmt::Debug for Bit {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Off => 0.fmt(formatter),
-            On  => 1.fmt(formatter),
+            On => 1.fmt(formatter),
         }
     }
 }
@@ -80,7 +78,11 @@ impl BitXor for Bit {
     type Output = Self;
 
     fn bitxor(self, other: Self) -> Self {
-        if self == other { Off } else { On }
+        if self == other {
+            Off
+        } else {
+            On
+        }
     }
 }
 
@@ -90,11 +92,10 @@ impl Not for Bit {
     fn not(self) -> Self {
         match self {
             Off => On,
-            On  => Off,
+            On => Off,
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

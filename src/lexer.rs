@@ -1,12 +1,4 @@
-use {
-    std::{
-        collections::HashMap,
-        error,
-        fmt,
-        slice,
-    },
-};
-
+use std::{collections::HashMap, error, fmt, slice};
 
 /// The white-listed set of non-digit symbols.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -28,7 +20,6 @@ pub enum Token {
     Sym(Symbol),
 }
 
-
 /// Surprise, a holder of tokens
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenSequence(Vec<Token>);
@@ -45,7 +36,11 @@ impl TokenSequence {
     fn last(&self) -> Option<&Token> {
         let len = self.0.len();
 
-        if len == 0 { None } else { Some(&self.0[len - 1]) }
+        if len == 0 {
+            None
+        } else {
+            Some(&self.0[len - 1])
+        }
     }
 
     fn add(&mut self, t: Token) {
@@ -73,9 +68,9 @@ impl fmt::Display for LexErr {
 
         match self {
             InvalidCharacter(c) => write!(f, "Invalid character: '{}'", c),
-            UnexpectedCharacter { position, chr} => write!(
-                f, "Unexpected character at {}: '{}'", position, chr
-            ),
+            UnexpectedCharacter { position, chr } => {
+                write!(f, "Unexpected character at {}: '{}'", position, chr)
+            }
         }
     }
 }
@@ -88,7 +83,7 @@ type LexResult = Result<TokenSequence, LexErr>;
 pub fn lex(s: &str) -> LexResult {
     use self::Symbol::*;
 
-    let charmap = map!{
+    let charmap = map! {
         '*' => Asterisk,
         '^' => Caret,
         '/' => FwdSlash,
@@ -103,7 +98,9 @@ pub fn lex(s: &str) -> LexResult {
     let mut chars = s.chars().enumerate().peekable();
 
     while let Some((_i1, c)) = chars.next() {
-        if c.is_whitespace() { continue; }
+        if c.is_whitespace() {
+            continue;
+        }
 
         if let Some(symbol) = charmap.get(&c) {
             tokens.add(Token::Sym(symbol.clone()));
@@ -128,14 +125,14 @@ pub fn lex(s: &str) -> LexResult {
                     continue;
                 }
 
-                if !c2.is_digit(10) { break; }
+                if !c2.is_digit(10) {
+                    break;
+                }
 
                 num.push(chars.next().unwrap().1);
                 comma_last = false;
             }
-            tokens.add(
-                Token::Num(num.parse::<i64>().unwrap())
-            );
+            tokens.add(Token::Num(num.parse::<i64>().unwrap()));
             continue;
         }
 
@@ -151,77 +148,61 @@ mod tests {
 
     #[test]
     fn test_lex_success() {
-        use super::Token::*;
         use super::Symbol::*;
+        use super::Token::*;
 
-        let assert = |s: &str, v: Vec<Token>| assert_eq!(
-            lex(s).unwrap(),
-            TokenSequence(v),
-        );
+        let assert = |s: &str, v: Vec<Token>| assert_eq!(lex(s).unwrap(), TokenSequence(v),);
 
         assert("", vec![]);
         assert("     \t\n    ", vec![]);
 
-        assert("123\t432      ", vec![
-            Num(123),
-            Num(432),
-        ]);
+        assert("123\t432      ", vec![Num(123), Num(432)]);
 
-        assert("1234567 7890 5432", vec![
-            Num(1234567),
-            Num(7890),
-            Num(5432),
-        ]);
+        assert(
+            "1234567 7890 5432",
+            vec![Num(1234567), Num(7890), Num(5432)],
+        );
 
-        assert("0 -0", vec![
-            Num(0),
-            Sym(Minus),
-            Num(0),
-        ]);
+        assert("0 -0", vec![Num(0), Sym(Minus), Num(0)]);
 
-        assert("5 - -4", vec![
-            Num(5),
-            Sym(Minus),
-            Sym(Minus),
-            Num(4),
-        ]);
+        assert("5 - -4", vec![Num(5), Sym(Minus), Sym(Minus), Num(4)]);
 
-        assert("5 + 4", vec![
-            Num(5),
-            Sym(Plus),
-            Num(4),
-        ]);
+        assert("5 + 4", vec![Num(5), Sym(Plus), Num(4)]);
 
-        assert("5 + 4*(-2/      0)", vec![
-            Num(5),
-            Sym(Plus),
-            Num(4),
-            Sym(Asterisk),
-            Sym(ParenOpen),
-            Sym(Minus),
-            Num(2),
-            Sym(FwdSlash),
-            Num(0),
-            Sym(ParenClose),
-        ]);
+        assert(
+            "5 + 4*(-2/      0)",
+            vec![
+                Num(5),
+                Sym(Plus),
+                Num(4),
+                Sym(Asterisk),
+                Sym(ParenOpen),
+                Sym(Minus),
+                Num(2),
+                Sym(FwdSlash),
+                Num(0),
+                Sym(ParenClose),
+            ],
+        );
 
-        assert("5 + -12,192,293", vec![
-            Num(5),
-            Sym(Plus),
-            Sym(Minus),
-            Num(12_192_293),
-        ]);
+        assert(
+            "5 + -12,192,293",
+            vec![Num(5), Sym(Plus), Sym(Minus), Num(12_192_293)],
+        );
 
-        assert("*^\n/-)(%+", vec![
-            Sym(Asterisk),
-            Sym(Caret),
-            Sym(FwdSlash),
-            Sym(Minus),
-            Sym(ParenClose),
-            Sym(ParenOpen),
-            Sym(Percent),
-            Sym(Plus),
-        ]);
+        assert(
+            "*^\n/-)(%+",
+            vec![
+                Sym(Asterisk),
+                Sym(Caret),
+                Sym(FwdSlash),
+                Sym(Minus),
+                Sym(ParenClose),
+                Sym(ParenOpen),
+                Sym(Percent),
+                Sym(Plus),
+            ],
+        );
     }
 
     #[test]
@@ -239,9 +220,12 @@ mod tests {
 
         let e = lex("5 + -12,192,,293").err().unwrap();
 
-        assert_eq!(e, UnexpectedCharacter {
-            position: 13,
-            chr: ',',
-        });
+        assert_eq!(
+            e,
+            UnexpectedCharacter {
+                position: 13,
+                chr: ',',
+            }
+        );
     }
 }
