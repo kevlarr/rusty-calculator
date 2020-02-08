@@ -17,7 +17,7 @@ macro_rules! map {
 }
 
 pub mod lexer;
-mod parser;
+pub mod parser;
 pub mod types;
 
 use types::{Binary, ParseResult};

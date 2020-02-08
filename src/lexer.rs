@@ -16,7 +16,7 @@ pub enum Symbol {
 /// The set of possible tokens.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Token {
-    Num(i64),
+    Num(f64),
     Sym(Symbol),
 }
 
@@ -132,7 +132,7 @@ pub fn lex(s: &str) -> LexResult {
                 num.push(chars.next().unwrap().1);
                 comma_last = false;
             }
-            tokens.add(Token::Num(num.parse::<i64>().unwrap()));
+            tokens.add(Token::Num(num.parse::<f64>().unwrap()));
             continue;
         }
 
@@ -157,6 +157,8 @@ mod tests {
         assert("     \t\n    ", vec![]);
 
         assert("123\t432      ", vec![Num(123), Num(432)]);
+
+        assert("1 + 2 3 ( *", vec![Num(123), Num(432)]);
 
         assert(
             "1234567 7890 5432",

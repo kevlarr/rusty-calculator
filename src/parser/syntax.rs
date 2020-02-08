@@ -41,6 +41,21 @@ impl Operation {
             Add | Sub => 1,
         }
     }
+
+    fn evaluate(&self, lhs: &Expr, rhs: &Expr) -> f64 {
+        use self::Operation::*;
+
+        let (lhs, rhs) = (lhs.evaluate(), rhs.evaluate());
+
+        match self {
+            Add => lhs + rhs,
+            Sub => lhs - rhs,
+            Mul => lhs * rhs,
+            Div => lhs / rhs,
+            Mod => lhs % rhs,
+            Exp => lhs.powf(rhs),
+        }
+    }
 }
 
 /// A hierachical syntax element that enables the parsing of expressions
@@ -51,6 +66,12 @@ pub struct BinaryOp(Expr, Operation, Expr);
 impl BinaryOp {
     pub fn new(lhs: Expr, op: Operation, rhs: Expr) -> Self {
         Self(lhs, op, rhs)
+    }
+
+    fn evaluate(&self) -> f64 {
+        let Self(lhs, op, rhs) = self;
+
+        op.evaluate(lhs, rhs)
     }
 
     /// Traverses down the right-most branch to compare itself against
@@ -134,7 +155,21 @@ impl BinaryOp {
 pub enum Expr {
     Empty,
     BinOp(Box<BinaryOp>),
-    Literal(i64),
+    Literal(f64),
     Negation(Box<Expr>),
     SubExpr(Box<Expr>),
+}
+
+impl Expr {
+    pub fn evaluate(&self) -> f64 {
+        use self::Expr::*;
+
+        match self {
+            Empty => panic!("Cannot evaluate empty node"),
+            BinOp(binary_op) => binary_op.evaluate(),
+            Literal(n) => *n,
+            Negation(expr) => -expr.evaluate(),
+            SubExpr(expr) => expr.evaluate(),
+        }
+    }
 }
