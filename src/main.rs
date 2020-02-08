@@ -1,16 +1,19 @@
 extern crate rustycalc;
 
+use rustycalc::lexer;
+use rustycalc::types::Operation;
 use std::io;
 use std::io::Write;
-use rustycalc::types::Operation;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
 
     if args.len() < 2 {
-        println!("Usage:
+        println!(
+            "Usage:
     calc -i                # Open interactive prompt
-    calc '<expression>'    # Calculate and print result of provided expression");
+    calc '<expression>'    # Calculate and print result of provided expression"
+        );
         return;
     }
 
@@ -23,7 +26,11 @@ fn main() {
 fn interact() {
     println!("--Kevin's Rusty Calculator--");
     println!("  Enter expression (eg. 124 + 12) or q to quit");
-    println!("  Numbers can span from {} to {}", std::i64::MIN, std::i64::MAX);
+    println!(
+        "  Numbers can span from {} to {}",
+        std::i64::MIN,
+        std::i64::MAX
+    );
 
     loop {
         match prompt().as_ref() {
@@ -45,6 +52,8 @@ fn prompt() -> String {
 }
 
 fn evaluate(input: &str) {
+    lexer::lex(input).unwrap();
+
     let mut pieces = input.split_whitespace();
     let mut piece;
 
@@ -55,7 +64,7 @@ fn evaluate(input: &str) {
         None => {
             eprintln!("Error: Must supply valid left-hand argument");
             return;
-        },
+        }
     };
 
     piece = pieces.next();
@@ -64,7 +73,7 @@ fn evaluate(input: &str) {
         None => {
             eprintln!("Error: '{:?}' not a valid operator", piece);
             return;
-        },
+        }
     };
 
     piece = pieces.next();
@@ -73,7 +82,7 @@ fn evaluate(input: &str) {
         None => {
             eprintln!("Error: Must supply valid right-hand argument");
             return;
-        },
+        }
     };
 
     // ... and to be a proper expression there shouldn't be anything left

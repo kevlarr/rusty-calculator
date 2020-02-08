@@ -1,15 +1,13 @@
-use ::std::cmp::PartialEq;
-use ::std::fmt;
-use ::std::ops::{Add, Div, Mul, Shl, Shr, Sub};
+use std::cmp::PartialEq;
+use std::fmt;
+use std::ops::{Add, Div, Mul, Shl, Shr, Sub};
 
 use super::{Bit, ParseResult};
-
 
 /// Binary: Sequence of Bits, ordered from most to least significant
 pub struct Binary([Bit; 64]);
 
 impl Binary {
-
     /// Create a Binary filled with provided Bit
     pub fn of(b: Bit) -> Binary {
         Binary([b; 64])
@@ -33,7 +31,9 @@ impl Binary {
         let bit_string = format!("{:#066b}", n);
         let mut binary = Binary::zero();
 
-        bit_string.chars().skip(2)
+        bit_string
+            .chars()
+            .skip(2)
             .map(|c| if c == '1' { Bit::On } else { Bit::Off })
             .enumerate()
             .for_each(|(i, bit)| binary.set(i, bit));
@@ -149,7 +149,7 @@ impl Shl<usize> for &Binary {
     fn shl(self, rhs: usize) -> Binary {
         let mut shifted = Binary::zero();
 
-        for i in 0..(64 - rhs)  {
+        for i in 0..(64 - rhs) {
             shifted.set(i, self.get(i + 1));
         }
 
@@ -290,14 +290,17 @@ impl<'a, 'b> Div<&'b Binary> for &'a Binary {
             }
         }
 
-        if negate { quotient.complement() } else { quotient }
+        if negate {
+            quotient.complement()
+        } else {
+            quotient
+        }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{Bit, Binary};
+    use super::{Binary, Bit};
 
     #[test]
     fn test_shl() {
