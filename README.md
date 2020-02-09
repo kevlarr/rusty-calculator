@@ -29,3 +29,4 @@ With Rust 1.29.0 and `cargo` installed:
 - [x] Divide
 - [ ] Exponentiation
 - [ ] Modulus
+- [ ] Support float
