@@ -16,11 +16,16 @@ macro_rules! map {
     }};
 }
 
+mod binary;
+mod bit;
+
 pub mod lexer;
 pub mod parser;
-pub mod types;
 
-use types::{Binary, ParseResult};
+pub use binary::Binary;
+pub use bit::Bit;
+
+pub type ParseResult = Result<i64, ::std::num::ParseIntError>;
 
 #[cfg(test)]
 mod tests {

@@ -2,7 +2,7 @@ use std::cmp::PartialEq;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Shl, Shr, Sub};
 
-use super::{Bit, ParseResult};
+use crate::{Bit, ParseResult};
 
 /// Binary: Sequence of Bits, ordered from most to least significant
 #[derive(Clone)]
