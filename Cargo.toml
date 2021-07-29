@@ -3,4 +3,6 @@ name = "rustycalc"
 version = "0.1.0"
 authors = ["kevlarr <echo1@dvnl.net>"]
 
+edition = "2018"
+
 [dependencies]

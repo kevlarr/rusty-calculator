@@ -7,7 +7,7 @@ simulating logic gates and arithmetic circuits.
 
 ## Usage
 
-With Rust 1.29+ and `cargo` installed:
+With Rust 1.31+ and `cargo` installed:
 
 1. `git clone https://github.com/kevlarr/rusty-calc`
 2. `cd rusty-calc`

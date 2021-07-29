@@ -2,7 +2,7 @@ use std::cmp::{Ordering, PartialOrd};
 use std::fmt;
 use std::ops::{BitAnd, BitOr, BitXor, Not};
 
-/// Bit: Representation of a transistor, either on or off
+/// Represents the state of a transistor
 #[derive(Copy, Clone, PartialEq)]
 pub enum Bit {
     Off,
@@ -44,7 +44,7 @@ impl PartialOrd for Bit {
     fn partial_cmp(&self, other: &Bit) -> Option<Ordering> {
         Some(if self == other {
             Ordering::Equal
-        } else if *self == Bit::On && *other == Bit::Off {
+        } else if *self == On && *other == Off {
             Ordering::Greater
         } else {
             Ordering::Less
@@ -52,6 +52,7 @@ impl PartialOrd for Bit {
     }
 }
 
+/// "And" logic gate (&)
 impl BitAnd for Bit {
     type Output = Self;
 
@@ -63,17 +64,19 @@ impl BitAnd for Bit {
     }
 }
 
+/// "Or" logic gate (|)
 impl BitOr for Bit {
     type Output = Self;
 
     fn bitor(self, other: Self) -> Self {
         match (self, other) {
-            (On, _) | (_, On) => On,
-            _ => Off,
+            (Off, Off) => Off,
+            _ => On,
         }
     }
 }
 
+/// "Exlusive or" logic gate (^)
 impl BitXor for Bit {
     type Output = Self;
 
@@ -86,13 +89,14 @@ impl BitXor for Bit {
     }
 }
 
+/// "Not" logic gate
 impl Not for Bit {
     type Output = Self;
 
     fn not(self) -> Self {
         match self {
             Off => On,
-            On => Off,
+            _ => Off,
         }
     }
 }

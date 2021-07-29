@@ -1,7 +1,7 @@
 use super::error::ParseErr;
 use crate::{
     lexer::Symbol,
-    Binary,
+    Number,
 };
 
 /// The supported binary BinaryOp for building a syntax tree.
@@ -45,16 +45,16 @@ impl Operation {
         }
     }
 
-    fn evaluate(&self, lhs: &Expr, rhs: &Expr) -> Binary {
+    fn evaluate(&self, lhs: &Expr, rhs: &Expr) -> Number {
         use self::Operation::*;
 
         let (lhs, rhs) = (lhs.evaluate(), rhs.evaluate());
 
         match self {
-            Add => &lhs + &rhs,
-            Sub => &lhs - &rhs,
-            Mul => &lhs * &rhs,
-            Div => &lhs / &rhs,
+            Add => lhs + rhs,
+            Sub => lhs - rhs,
+            Mul => lhs * rhs,
+            Div => lhs / rhs,
             //Mod => lhs % rhs,
             //Exp => lhs.powf(rhs),
         }
@@ -71,7 +71,7 @@ impl BinaryOp {
         Self(lhs, op, rhs)
     }
 
-    fn evaluate(&self) -> Binary {
+    fn evaluate(&self) -> Number {
         let Self(lhs, op, rhs) = self;
 
         op.evaluate(lhs, rhs)
@@ -158,20 +158,20 @@ impl BinaryOp {
 pub enum Expr {
     Empty,
     BinOp(Box<BinaryOp>),
-    Literal(Binary),
+    Literal(Number),
     Negation(Box<Expr>),
     SubExpr(Box<Expr>),
 }
 
 impl Expr {
-    pub fn evaluate(&self) -> Binary {
+    pub fn evaluate(&self) -> Number {
         use self::Expr::*;
 
         match self {
             Empty => panic!("Cannot evaluate empty node"),
             BinOp(binary_op) => binary_op.evaluate(),
-            Literal(n) => n.clone(),
-            Negation(expr) => -&expr.evaluate(),
+            Literal(n) => *n,
+            Negation(expr) => -expr.evaluate(),
             SubExpr(expr) => expr.evaluate(),
         }
     }

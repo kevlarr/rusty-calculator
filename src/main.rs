@@ -1,9 +1,7 @@
-extern crate rustycalc;
-
-use rustycalc::{lexer, parser};
-use rustycalc::types::Operation;
 use std::io;
 use std::io::Write;
+
+use rustycalc::{lexer, parser};
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
