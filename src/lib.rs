@@ -22,34 +22,6 @@ pub mod types;
 
 use types::{Binary, ParseResult};
 
-pub fn add(x: i64, y: i64) -> ParseResult {
-    execute(|a, b| a + b, x, y)
-}
-
-pub fn subtract(x: i64, y: i64) -> ParseResult {
-    execute(|a, b| a - b, x, y)
-}
-
-pub fn multiply(x: i64, y: i64) -> ParseResult {
-    execute(|a, b| a * b, x, y)
-}
-
-pub fn divide(x: i64, y: i64) -> ParseResult {
-    execute(|a, b| a / b, x, y)
-}
-
-fn execute(f: fn(&Binary, &Binary) -> Binary, x: i64, y: i64) -> ParseResult {
-    let bx = Binary::from_int(x);
-    let by = Binary::from_int(y);
-    let result = f(&bx, &by);
-
-    //println!("{:?}\n{}\n", bx, x);
-    //println!("{:?}\n{}\n", by, y);
-    //println!("{:?}", result);
-
-    result.to_int()
-}
-
 #[cfg(test)]
 mod tests {
     #[test]

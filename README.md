@@ -2,31 +2,33 @@
 
 <sub>Or, *A Pointlessly Complex Calculator Prompt*</sub>
 
-An exercise in learning Rust via developing a mathematical expression parser as well as
-arithmetic operations that evaluate solely through artificial logic gates and circuits.
+Performs basic integer math without using numbers or operations by
+simulating logic gates and arithmetic circuits.
 
-With Rust 1.29.0 and `cargo` installed:
+## Usage
+
+With Rust 1.29+ and `cargo` installed:
 
 1. `git clone https://github.com/kevlarr/rusty-calc`
 2. `cd rusty-calc`
-3. `cargo run`
+3. `cargo run -- -i` for an interactive prompt, or `cargo run -- '4,000 + 12 * 3'` for a single calculation
 4. Make fun of it
 
 ## TODO
+
+- [ ] Support float
 
 ### Expression parsing
 
 - [x] Parse simple binary arithmetic operations
 - [x] Support operator precedence without requiring parentheses
 - [x] Support nested expressions via parentheses
-- [x] Expression evaluation via built-in operators
-- [ ] Expression evaluation via artificial circuits
 
-### Artificial circuits
+### Circuits
+
 - [x] Add
 - [x] Subtract
 - [x] Multiply
 - [x] Divide
 - [ ] Exponentiation
-- [ ] Modulus
-- [ ] Support float
+- [ ] Modulo

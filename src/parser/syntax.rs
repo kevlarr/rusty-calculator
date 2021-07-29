@@ -1,5 +1,8 @@
 use super::error::ParseErr;
-use crate::lexer::Symbol;
+use crate::{
+    lexer::Symbol,
+    Binary,
+};
 
 /// The supported binary BinaryOp for building a syntax tree.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -8,8 +11,8 @@ pub enum Operation {
     Sub,
     Mul,
     Div,
-    Exp,
-    Mod,
+    //Exp,
+    //Mod,
 }
 
 impl Operation {
@@ -18,11 +21,11 @@ impl Operation {
 
         Ok(match s {
             Asterisk => Mul,
-            Caret => Exp,
             FwdSlash => Div,
             Minus => Sub,
-            Percent => Mod,
             Plus => Add,
+            //Caret => Exp,
+            //Percent => Mod,
 
             _ => return Err(format!("Cannot convert symbol '{:?}' to operation", s)),
         })
@@ -36,24 +39,24 @@ impl Operation {
         use self::Operation::*;
 
         match self {
-            Exp => 3,
-            Mul | Div | Mod => 2,
+            //Exp => 3,
+            Mul | Div /* | Mod */ => 2,
             Add | Sub => 1,
         }
     }
 
-    fn evaluate(&self, lhs: &Expr, rhs: &Expr) -> f64 {
+    fn evaluate(&self, lhs: &Expr, rhs: &Expr) -> Binary {
         use self::Operation::*;
 
         let (lhs, rhs) = (lhs.evaluate(), rhs.evaluate());
 
         match self {
-            Add => lhs + rhs,
-            Sub => lhs - rhs,
-            Mul => lhs * rhs,
-            Div => lhs / rhs,
-            Mod => lhs % rhs,
-            Exp => lhs.powf(rhs),
+            Add => &lhs + &rhs,
+            Sub => &lhs - &rhs,
+            Mul => &lhs * &rhs,
+            Div => &lhs / &rhs,
+            //Mod => lhs % rhs,
+            //Exp => lhs.powf(rhs),
         }
     }
 }
@@ -68,7 +71,7 @@ impl BinaryOp {
         Self(lhs, op, rhs)
     }
 
-    fn evaluate(&self) -> f64 {
+    fn evaluate(&self) -> Binary {
         let Self(lhs, op, rhs) = self;
 
         op.evaluate(lhs, rhs)
@@ -155,20 +158,20 @@ impl BinaryOp {
 pub enum Expr {
     Empty,
     BinOp(Box<BinaryOp>),
-    Literal(f64),
+    Literal(Binary),
     Negation(Box<Expr>),
     SubExpr(Box<Expr>),
 }
 
 impl Expr {
-    pub fn evaluate(&self) -> f64 {
+    pub fn evaluate(&self) -> Binary {
         use self::Expr::*;
 
         match self {
             Empty => panic!("Cannot evaluate empty node"),
             BinOp(binary_op) => binary_op.evaluate(),
-            Literal(n) => *n,
-            Negation(expr) => -expr.evaluate(),
+            Literal(n) => n.clone(),
+            Negation(expr) => -&expr.evaluate(),
             SubExpr(expr) => expr.evaluate(),
         }
     }

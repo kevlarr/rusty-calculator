@@ -1,10 +1,11 @@
 use std::cmp::PartialEq;
 use std::fmt;
-use std::ops::{Add, Div, Mul, Shl, Shr, Sub};
+use std::ops::{Add, Div, Mul, Neg, Shl, Shr, Sub};
 
 use super::{Bit, ParseResult};
 
 /// Binary: Sequence of Bits, ordered from most to least significant
+#[derive(Clone)]
 pub struct Binary([Bit; 64]);
 
 impl Binary {
@@ -60,7 +61,7 @@ impl Binary {
         if binary.is_negative() {
             // Take complement to make "positive" and then add sign
             s.push('-');
-            binary = binary.complement();
+            binary = -&binary;
         }
 
         for i in 0..64 {
@@ -91,28 +92,6 @@ impl Binary {
     /// Returns whether or not Binary represents negative number
     pub fn is_negative(&self) -> bool {
         self.is_on_at(0)
-    }
-
-    /// Returns ownership for a new copy of self
-    pub fn copy(&self) -> Binary {
-        let mut copy = Binary::zero();
-
-        for i in 0..64 {
-            copy.set(i, self.get(i));
-        }
-
-        copy
-    }
-
-    /// Inverts the sign of a Binary by flipping bits and adding 1
-    pub fn complement(&self) -> Binary {
-        let mut comp = Binary::zero();
-
-        for i in 0..64 {
-            comp.set(i, !self.get(i));
-        }
-
-        &comp + &Binary::one()
     }
 }
 
@@ -171,6 +150,21 @@ impl Shr<usize> for &Binary {
     }
 }
 
+impl Neg for &Binary {
+    type Output = Binary;
+
+    /// Inverts the sign of a Binary by flipping bits and adding 1
+    fn neg(self) -> Self::Output {
+        let mut negated = Binary::zero();
+
+        for i in 0..64 {
+            negated.set(i, !self.get(i));
+        }
+
+        &negated + &Binary::one()
+    }
+}
+
 impl<'a, 'b> Add<&'b Binary> for &'a Binary {
     type Output = Binary;
 
@@ -198,7 +192,7 @@ impl<'a, 'b> Sub<&'b Binary> for &'a Binary {
 
     /// Simple subtractor that takes complement of other and adds to self
     fn sub(self, other: &'b Binary) -> Binary {
-        self + &other.complement()
+        self + &(-other)
     }
 }
 
@@ -245,15 +239,15 @@ impl<'a, 'b> Div<&'b Binary> for &'a Binary {
         let negate = self.is_negative() != other.is_negative();
 
         let dividend = if self.is_negative() {
-            self.complement()
+            -self
         } else {
-            self.copy()
+            self.clone()
         };
 
         let divisor = if other.is_negative() {
-            other.complement()
+            -other
         } else {
-            other.copy()
+            other.clone()
         };
 
         let mut quotient = Binary::zero();
@@ -291,7 +285,7 @@ impl<'a, 'b> Div<&'b Binary> for &'a Binary {
         }
 
         if negate {
-            quotient.complement()
+            -&quotient
         } else {
             quotient
         }

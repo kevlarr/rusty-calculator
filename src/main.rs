@@ -54,6 +54,6 @@ fn evaluate(input: &str) {
 
     println!("{:?}", tokens);
     println!("{:?}", expression);
-    println!("\n{}", result);
-
+    println!("{:?}", result);
+    println!("\n{:?}", result.to_int());
 }

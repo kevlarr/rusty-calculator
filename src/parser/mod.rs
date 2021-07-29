@@ -1,6 +1,7 @@
 pub mod error;
 pub mod syntax;
 
+use crate::Binary;
 use super::{
     lexer::{Symbol, Token, TokenSequence},
     parser::{
@@ -55,12 +56,12 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
             }
 
             Tk::Num(n) => match expr {
-                Ex::Empty => Ex::Literal(n),
+                Ex::Empty => Ex::Literal(Binary::from_int(n)),
 
-                Ex::Negation(val) if *val == Ex::Empty => Ex::Negation(Box::new(Ex::Literal(n))),
+                Ex::Negation(val) if *val == Ex::Empty => Ex::Negation(Box::new(Ex::Literal(Binary::from_int(n)))),
 
                 Ex::BinOp(mut tree) => tree
-                    .append_expr(Ex::Literal(n))
+                    .append_expr(Ex::Literal(Binary::from_int(n)))
                     .map(|()| Ex::BinOp(tree))?,
 
                 _ => {
