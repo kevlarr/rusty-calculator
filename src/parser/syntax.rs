@@ -1,6 +1,6 @@
 use super::error::ParseErr;
 use crate::{
-    lexer::Symbol,
+    lexer::Token,
     Number,
 };
 
@@ -16,18 +16,18 @@ pub enum Operation {
 }
 
 impl Operation {
-    pub fn from_symbol(s: Symbol) -> Result<Self, String> {
-        use self::{Operation::*, Symbol::*};
+    pub fn from_token(t: Token) -> Result<Self, String> {
+        use self::Operation::*;
 
-        Ok(match s {
-            Asterisk => Mul,
-            FwdSlash => Div,
-            Minus => Sub,
-            Plus => Add,
-            //Caret => Exp,
-            //Percent => Mod,
+        Ok(match t {
+            Token::Asterisk => Mul,
+            Token::FwdSlash => Div,
+            Token::Minus => Sub,
+            Token::Plus => Add,
+            // Token::Caret => Exp,
+            // Token::Percent => Mod,
 
-            _ => return Err(format!("Cannot convert symbol '{:?}' to operation", s)),
+            _ => return Err(format!("Cannot convert token '{:?}' to operation", t)),
         })
     }
 
@@ -86,11 +86,11 @@ impl BinaryOp {
                 Expr::BinOp(tree) => {
                     tree.append_operation(next_op);
                 },
-                expr => {
+                _ => {
                     // Since new operation takes precedence over existing one,
                     // assuming self is equivalent to "1 + 3" and the incoming
-                    // operation is "*", then self should be restructurwd to
-                    // "1 + Tree(3 * empty)"
+                    // operation is "*", then self should be restructured to
+                    // "1 + BinaryOp(3 * empty)"
                     let mut new_rhs = Self(Expr::Empty, next_op, Expr::Empty);
 
                     std::mem::swap(&mut self.2, &mut new_rhs.0);
@@ -102,7 +102,7 @@ impl BinaryOp {
 
         // Existing operation takes precedence, so assuming self is "1 * 3"
         // and incoming operation is "+", self should become
-        // "Tree(1 * 3) + empty"
+        // "BinaryOp(1 * 3) + empty"
         let mut new_lhs = Self(Expr::Empty, self.1, Expr::Empty);
 
         std::mem::swap(&mut self.0, &mut new_lhs.0);

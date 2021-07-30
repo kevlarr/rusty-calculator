@@ -2,7 +2,7 @@ pub mod error;
 pub mod syntax;
 
 use crate::{
-    lexer::{Symbol, Token, TokenSequence},
+    lexer::Token,
     parser::{
         error::ParseErr,
         //machine::Machine,
@@ -12,7 +12,7 @@ use crate::{
 };
 use std::{iter::Peekable, slice::Iter};
 
-pub fn parse(seq: &TokenSequence) -> Result<Expr, ParseErr> {
+pub fn parse(seq: &Vec<Token>) -> Result<Expr, ParseErr> {
     if seq.len() == 0 {
         return Ok(Expr::Empty);
     }
@@ -25,16 +25,13 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
 
     type Ex = Expr;
     type Op = Operation;
-    type Sy = Symbol;
     type Tk = Token;
 
     while let Some(&t) = tokens.next() {
-        let next: Option<&Token> = tokens.peek().map(|t| t.clone());
-
         expr = match t {
-            Tk::Sym(Sy::ParenClose) => return Ok(expr),
+            Tk::ParenClose => return Ok(expr),
 
-            Tk::Sym(Sy::ParenOpen) => {
+            Tk::ParenOpen => {
                 let sub_expr = to_ast(tokens, Ex::Empty)?;
 
                 match expr {
@@ -72,7 +69,7 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
 
             // Minus is the only operator that's both unary and binary,
             // so it needs some special treatment
-            Tk::Sym(Sy::Minus) => match expr {
+            Tk::Minus => match expr {
                 Ex::Empty => Ex::Negation(Box::new(Ex::Empty)),
 
                 Ex::Literal(n) => Ex::BinOp(Box::new(BinaryOp::new(
@@ -92,7 +89,7 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
             },
 
             // Asterisk | Caret | FwdSlash | Percent | Plus
-            Tk::Sym(s) => match Op::from_symbol(s) {
+            tk => match Op::from_token(tk) {
                 Ok(op) => match expr {
                     Ex::Empty => return Err(ParseErr::UnexpectedToken(t)),
 
@@ -113,7 +110,7 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
 
 #[cfg(test)]
 mod tests {
-    use super::{parse, Expr as Ex, Operation as Op, Symbol as Sy, Token as Tk, BinaryOp, TokenSequence};
+    use super::{parse, Expr as Ex, Operation as Op, Symbol as Sy, Token as Tk, BinaryOp};
 
     fn assert(tokens: Vec<super::Token>, expr: super::Expr) {
         assert_eq!(parse(&TokenSequence::with_tokens(tokens)), Ok(expr),);
