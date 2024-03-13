@@ -5,26 +5,30 @@ use crate::{
     lexer::Token,
     parser::{
         error::ParseErr,
-        //machine::Machine,
-        syntax::{BinaryOp, Expr, Operation},
+        syntax::*,
     },
     Number,
 };
 use std::{iter::Peekable, slice::Iter};
 
-pub fn parse(seq: &Vec<Token>) -> Result<Expr, ParseErr> {
+pub fn parse(seq: &Vec<Token>) -> Result<Box<dyn Expression>, ParseErr> {
     if seq.len() == 0 {
-        return Ok(Expr::Empty);
+        return Ok(Box::new(Empty));
     }
 
-    to_ast(&mut seq.iter().peekable(), Expr::Empty)
+    to_ast(&mut seq.iter().peekable(), Box::new(Empty))
 }
 
-fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, ParseErr> {
+fn to_ast(
+    tokens: &mut Peekable<Iter<Token>>,
+    starting: Box<dyn Expression>,
+) -> Result<Box<dyn Expression>, ParseErr> {
     let mut expr = starting;
 
-    type Ex = Expr;
-    type Op = Operation;
+    Ok(starting)
+
+    /*
+    type Op = Operator;
     type Tk = Token;
 
     while let Some(&t) = tokens.next() {
@@ -106,6 +110,7 @@ fn to_ast(tokens: &mut Peekable<Iter<Token>>, starting: Expr) -> Result<Expr, Pa
     }
 
     Ok(expr)
+    */
 }
 
 #[cfg(test)]
