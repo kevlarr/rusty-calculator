@@ -1,59 +1,17 @@
-use std::{collections::HashMap, error, fmt, slice};
+use std::{collections::HashMap, error, fmt};
 
-/// The white-listed set of non-digit symbols.
+/// The set of permissible tokens.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Symbol {
+pub enum Token {
+    Num(i64),
     Asterisk,
-    Caret,
     FwdSlash,
     Minus,
     ParenClose,
     ParenOpen,
-    Percent,
     Plus,
-}
-
-/// The set of possible tokens.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Token {
-    Num(i64),
-    Sym(Symbol),
-}
-
-/// Surprise, a holder of tokens
-#[derive(Clone, Debug, PartialEq)]
-pub struct TokenSequence(Vec<Token>);
-
-impl TokenSequence {
-    pub fn new() -> Self {
-        TokenSequence(Vec::new())
-    }
-
-    pub fn with_tokens(tokens: Vec<Token>) -> Self {
-        TokenSequence(tokens)
-    }
-
-    fn last(&self) -> Option<&Token> {
-        let len = self.0.len();
-
-        if len == 0 {
-            None
-        } else {
-            Some(&self.0[len - 1])
-        }
-    }
-
-    fn add(&mut self, t: Token) {
-        self.0.push(t);
-    }
-
-    pub fn iter(&self) -> slice::Iter<Token> {
-        self.0.iter()
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
+    // Caret,
+    // Percent,
 }
 
 /// The set of possible lexer errors.
@@ -77,24 +35,24 @@ impl fmt::Display for LexErr {
 
 impl error::Error for LexErr {}
 
-type LexResult = Result<TokenSequence, LexErr>;
+type LexResult = Result<Vec<Token>, LexErr>;
 
 /// Receives input text and attempts to generate a valid token stream.
 pub fn lex(s: &str) -> LexResult {
-    use self::Symbol::*;
+    use self::Token::*;
 
     let charmap = map! {
         '*' => Asterisk,
-        '^' => Caret,
         '/' => FwdSlash,
         '-' => Minus,
         ')' => ParenClose,
         '(' => ParenOpen,
-        '%' => Percent,
         '+' => Plus
+        // '^' => Caret,
+        // '%' => Percent,
     };
 
-    let mut tokens = TokenSequence::new();
+    let mut tokens = Vec::new();
     let mut chars = s.chars().enumerate().peekable();
 
     while let Some((_i1, c)) = chars.next() {
@@ -102,8 +60,8 @@ pub fn lex(s: &str) -> LexResult {
             continue;
         }
 
-        if let Some(symbol) = charmap.get(&c) {
-            tokens.add(Token::Sym(symbol.clone()));
+        if let Some(token) = charmap.get(&c) {
+            tokens.push(*token);
             continue;
         }
 
@@ -132,7 +90,7 @@ pub fn lex(s: &str) -> LexResult {
                 num.push(chars.next().unwrap().1);
                 comma_last = false;
             }
-            tokens.add(Token::Num(num.parse::<i64>().unwrap()));
+            tokens.push(Token::Num(num.parse::<i64>().unwrap()));
             continue;
         }
 
